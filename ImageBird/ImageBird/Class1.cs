@@ -6,7 +6,11 @@ using System.Threading.Tasks;
 
 namespace ImageBird
 {
+    /// <summary>
+    /// Placeholder documentation.
+    /// </summary>
     public class Class1
     {
+        // Stub
     }
 }
