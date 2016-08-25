@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageBird", "ImageBird\Imag
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageBird.Tests", "ImageBird.Tests\ImageBird.Tests.csproj", "{163088F3-DBB1-4DED-A3D4-309DCD349B22}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared", "Shared", "{C6C082E9-7F09-4338-B3E0-A01D42691D9E}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{D481A19C-9A6C-44E2-9970-A3BC42C89819}"
 	ProjectSection(SolutionItems) = preProject
 		Settings.StyleCop = Settings.StyleCop
 	EndProjectSection
