@@ -29,22 +29,22 @@ namespace ImageBird
         /// <param name="image">The Bitmap to fingerprint.</param>
         /// <param name="mode">The fingerprint mode to use.</param>
         /// <returns>The fingerprint of the supplied image, using the specified mode.</returns>
-        public string Fingerprint(Bitmap image, FingerprintMode mode)
+        public static string Fingerprint(Bitmap image, FingerprintMode mode)
         {
             string returnValue = null;
             switch (mode)
             {
                 case FingerprintMode.PCASIFT:
-                    returnValue = this.FingerprintPCASIFT(image);
+                    returnValue = FingerprintPCASIFT(image);
                     break;
                 case FingerprintMode.SIFT:
-                    returnValue = this.FingerprintSIFT(image);
+                    returnValue = FingerprintSIFT(image);
                     break;
                 case FingerprintMode.SURF:
-                    returnValue = this.FingerprintSURF(image);
+                    returnValue = FingerprintSURF(image);
                     break;
                 case FingerprintMode.PHASH:
-                    returnValue = this.FingerprintPHASH(image);
+                    returnValue = FingerprintPHASH(image);
                     break;
                 default:
                     throw new ArgumentException(
@@ -64,9 +64,9 @@ namespace ImageBird
         /// <summary>
         /// Performs fingerprinting on the supplied image using the PCA-SIFT algorithm.
         /// </summary>
-        /// <param name="image">The image to fingerprint.</param>
+        /// <param name="image">The image to fingerprint. Assumed to be non-null.</param>
         /// <returns>The fingerprint of the supplied image.</returns>
-        public string FingerprintPCASIFT(Bitmap image)
+        private static string FingerprintPCASIFT(Bitmap image)
         {
             throw new NotImplementedException();
         }
@@ -74,9 +74,9 @@ namespace ImageBird
         /// <summary>
         /// Performs fingerprinting on the supplied image using the SIFT algorithm.
         /// </summary>
-        /// <param name="image">The image to fingerprint.</param>
+        /// <param name="image">The image to fingerprint. Assumed to be non-null.</param>
         /// <returns>The fingerprint of the supplied image.</returns>
-        public string FingerprintSIFT(Bitmap image)
+        private static string FingerprintSIFT(Bitmap image)
         {
             throw new NotImplementedException();
         }
@@ -84,9 +84,9 @@ namespace ImageBird
         /// <summary>
         /// Performs fingerprinting on the supplied image using the SURF algorithm.
         /// </summary>
-        /// <param name="image">The image to fingerprint.</param>
+        /// <param name="image">The image to fingerprint. Assumed to be non-null.</param>
         /// <returns>The fingerprint of the supplied image.</returns>
-        public string FingerprintSURF(Bitmap image)
+        private static string FingerprintSURF(Bitmap image)
         {
             throw new NotImplementedException();
         }
@@ -94,9 +94,9 @@ namespace ImageBird
         /// <summary>
         /// Performs fingerprinting on the supplied image using the PHASH algorithm.
         /// </summary>
-        /// <param name="image">The image to fingerprint.</param>
+        /// <param name="image">The image to fingerprint. Assumed to be non-null.</param>
         /// <returns>The fingerprint of the supplied image.</returns>
-        public string FingerprintPHASH(Bitmap image)
+        private static string FingerprintPHASH(Bitmap image)
         {
             throw new NotImplementedException();
         }
