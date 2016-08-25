@@ -43,6 +43,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Fingerprinting.cs" />
+    <Compile Include="Fingerprinters\FingerprinterFactory.cs" />
+    <Compile Include="Fingerprinters\IFingerprinter.cs" />
+    <Compile Include="Fingerprinters\PcaSiftFingerprinter.cs" />
+    <Compile Include="Fingerprinters\PhashFingerprinter.cs" />
+    <Compile Include="Fingerprinters\SiftFingerprinter.cs" />
+    <Compile Include="Fingerprinters\SurfFingerprinter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

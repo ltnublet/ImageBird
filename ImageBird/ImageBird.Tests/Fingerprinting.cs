@@ -1,122 +1,91 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using Xunit;
 using SUT = ImageBird;
 
-namespace ImageBird.Tests 
+namespace ImageBird.Tests
 {
     /// <summary>
-    /// This class contains all functionality related to testing the ImageBird.Fingerprinting class.
+    /// This class contains all tests for the ImageBird.Fingerprinting class.
     /// </summary>
-    public class Fingerprinting 
+    public class Fingerprinting
     {
         /// <summary>
-        /// Test the Fingerprint method, using a null Bitmap.
+        /// Test the Fingerprint method with an invalid (null) image for each algorithm.
         /// </summary>
-        [Fact]
-        public void Fingerprint_NullBitmap_ShouldThrowArgumentNull()
+        /// <param name="mode">The mode to attempt the fingerprinting with.</param>
+        [Theory]
+        [InlineData(SUT.Fingerprinting.FingerprintMode.PCASIFT)]
+        [InlineData(SUT.Fingerprinting.FingerprintMode.PHASH)]
+        [InlineData(SUT.Fingerprinting.FingerprintMode.SIFT)]
+        [InlineData(SUT.Fingerprinting.FingerprintMode.SURF)]
+        public void Fingerprint_NullImage_AllModes_ThrowsArgumentNull(
+            SUT.Fingerprinting.FingerprintMode mode)
         {
-            Bitmap testData = null;
-            // PCASIFT chosen arbitrarily, as it should not impact results of test.
-            SUT.Fingerprinting.FingerprintMode testMode = 
-                ImageBird.Fingerprinting.FingerprintMode.PCASIFT;
+            Bitmap testImage = null;
 
             Assert.Throws<ArgumentNullException>(
-                () => SUT.Fingerprinting.Fingerprint(testData, testMode));
+                () => SUT.Fingerprinting.Fingerprint(testImage, mode));
         }
 
         /// <summary>
-        /// Test the fingerprint method, using an invalid enum argument.
+        /// Test the Fingerprint method with an invalid (not in enumerable) mode.
         /// </summary>
         [Fact]
-        public void Fingerprint_InvalidEnum_ShouldThrowArgument()
+        public void Fingerprint_InvalidMode_ThrowsArgument()
         {
-            Bitmap testData = new Bitmap(1, 1);
-            SUT.Fingerprinting.FingerprintMode testMode =
+            Bitmap testImage = new Bitmap(1, 1);
+            SUT.Fingerprinting.FingerprintMode testMode = 
                 (SUT.Fingerprinting.FingerprintMode)(-1);
 
+            // Check that the mode we're assuming is invalid is actually invalid
+            Assert.DoesNotContain(
+                testMode, 
+                Enum.GetValues(typeof(SUT.Fingerprinting.FingerprintMode))
+                    .Cast<SUT.Fingerprinting.FingerprintMode>());
+
             Assert.Throws<ArgumentException>(
-                () => SUT.Fingerprinting.Fingerprint(testData, testMode));
+                () => SUT.Fingerprinting.Fingerprint(testImage, testMode));
         }
 
         /// <summary>
-        /// Test the Fingerprint method, using an invalid (malformed) Bitmap and the PCASIFT mode.
+        /// Test the Fingerprint method with an invalid (malformed, non-null) image for each algorithm.
         /// </summary>
-        [Fact]
-        public void Fingerprint_InvalidBitmap_PCASIFT_ShouldThrowArgument()
+        /// <param name="mode">The mode to attempt the fingerprinting with.</param>
+        [Theory]
+        [InlineData(SUT.Fingerprinting.FingerprintMode.PCASIFT)]
+        [InlineData(SUT.Fingerprinting.FingerprintMode.PHASH)]
+        [InlineData(SUT.Fingerprinting.FingerprintMode.SIFT)]
+        [InlineData(SUT.Fingerprinting.FingerprintMode.SURF)]
+        public void Fingerprint_InvalidImage_AllModes_ThrowsArgument(
+            SUT.Fingerprinting.FingerprintMode mode)
         {
-            // TODO: Implement test once related method minimally matches behaviour.
-            Assert.True(false, "Test not implemented.");
+            Bitmap testImage = new Bitmap(1, 1);
+
+            Assert.Throws<ArgumentException>(() => SUT.Fingerprinting.Fingerprint(testImage, mode));
         }
 
         /// <summary>
-        /// Test the Fingerprint method, using an invalid (malformed) Bitmap and the SIFT mode.
+        /// Test the Fingerprint method with a valid image for each algorithm.
         /// </summary>
-        [Fact]
-        public void Fingerprint_InvalidBitmap_SIFT_ShouldThrowArgument()
+        /// <param name="expected">The expected output for the associated mode.</param>
+        /// <param name="mode">The mode to attempt the fingerprinting with.</param>
+        [Theory]
+        [InlineData("Placeholder", SUT.Fingerprinting.FingerprintMode.PCASIFT)]
+        [InlineData("Placeholder", SUT.Fingerprinting.FingerprintMode.PHASH)]
+        [InlineData("Placeholder", SUT.Fingerprinting.FingerprintMode.SIFT)]
+        [InlineData("Placeholder", SUT.Fingerprinting.FingerprintMode.SURF)]
+        public void Fingerprint_ValidImage_AllModes_ShouldSucceed(
+            string expected,
+            SUT.Fingerprinting.FingerprintMode mode)
         {
-            // TODO: Implement test once related method minimally matches behaviour.
-            Assert.True(false, "Test not implemented.");
-        }
+            Bitmap testImage = new Bitmap(1, 1);
 
-        /// <summary>
-        /// Test the Fingerprint method, using an invalid (malformed) Bitmap and the SURF mode.
-        /// </summary>
-        [Fact]
-        public void Fingerprint_InvalidBitmap_SURF_ShouldThrowArgument()
-        {
-            // TODO: Implement test once related method minimally matches behaviour.
-            Assert.True(false, "Test not implemented.");
-        }
-
-        /// <summary>
-        /// Test the Fingerprint method, using an invalid (malformed) Bitmap and the PHASH mode.
-        /// </summary>
-        [Fact]
-        public void Fingerprint_InvalidBitmap_PHASH_ShouldThrowArgument()
-        {
-            // TODO: Implement test once related method minimally matches behaviour.
-            Assert.True(false, "Test not implemented.");
-        }
-
-        /// <summary>
-        /// Test the Fingerprint method, using a valid Bitmap and the PCASIFT mode.
-        /// </summary>
-        [Fact]
-        public void Fingerprint_ValidBitmap_PCASIFT_ShouldSucceed()
-        {
-            // TODO: Implement test once related method minimally matches behaviour.
-            Assert.True(false, "Test not implemented.");
-        }
-
-        /// <summary>
-        /// Test the Fingerprint method, using a valid Bitmap and the SIFT mode.
-        /// </summary>
-        [Fact]
-        public void Fingerprint_ValidBitmap_SIFT_ShouldSucceed()
-        {
-            // TODO: Implement test once related method minimally matches behaviour.
-            Assert.True(false, "Test not implemented.");
-        }
-
-        /// <summary>
-        /// Test the Fingerprint method, using a valid Bitmap and the SURF mode.
-        /// </summary>
-        [Fact]
-        public void Fingerprint_ValidBitmap_SURF_ShouldSucceed()
-        {
-            // TODO: Implement test once related method minimally matches behaviour.
-            Assert.True(false, "Test not implemented.");
-        }
-
-        /// <summary>
-        /// Test the Fingerprint method, using a valid Bitmap and the PHASH mode.
-        /// </summary>
-        [Fact]
-        public void Fingerprint_ValidBitmap_PHASH_ShouldSucceed()
-        {
-            // TODO: Implement test once related method minimally matches behaviour.
-            Assert.True(false, "Test not implemented.");
+            Assert.Equal(expected, SUT.Fingerprinting.Fingerprint(testImage, mode));
         }
     }
 }
