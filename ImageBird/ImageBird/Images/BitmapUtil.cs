@@ -5,6 +5,9 @@ using System.Drawing.Imaging;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Cudafy;
+using Cudafy.Host;
+using Cudafy.Translator;
 
 namespace ImageBird.Images
 {

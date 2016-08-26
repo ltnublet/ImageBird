@@ -55,6 +55,7 @@
     <Compile Include="Images\BitmapUtil.cs" />
     <Compile Include="Images\Picture.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="System.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
