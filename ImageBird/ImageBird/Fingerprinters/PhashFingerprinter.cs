@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ImageBird.Images;
 
 namespace ImageBird.Fingerprinters
 {
@@ -20,6 +21,11 @@ namespace ImageBird.Fingerprinters
         public string Fingerprint(Bitmap image)
         {
             throw new NotImplementedException();
+        }
+
+        private void DigestImage(Bitmap image)
+        {
+            Bitmap grayscale = image.ToGrayscale();
         }
     }
 }

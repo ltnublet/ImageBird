@@ -67,6 +67,7 @@
   </Choose>
   <ItemGroup>
     <Compile Include="Fingerprinting.cs" />
+    <Compile Include="BitmapUtil.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -77,6 +78,12 @@
       <Project>{e749fcca-7730-4ba7-a0d3-6869524d2c2a}</Project>
       <Name>ImageBird</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <Content Include="Resources\TestData1_Grayscale_KnownBad.png" />
+    <Content Include="Resources\TestData1_Grayscale_KnownGood.png" />
+    <Content Include="Resources\TestData1_KnownGood.png" />
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">

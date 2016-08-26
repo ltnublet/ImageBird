@@ -31,6 +31,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Cudafy.NET">
+      <HintPath>..\GPU\Cudafy.NET.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
@@ -49,8 +52,10 @@
     <Compile Include="Fingerprinters\PhashFingerprinter.cs" />
     <Compile Include="Fingerprinters\SiftFingerprinter.cs" />
     <Compile Include="Fingerprinters\SurfFingerprinter.cs" />
+    <Compile Include="Images\BitmapUtil.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(ProgramFiles)\MSBuild\StyleCop\v4.7\StyleCop.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

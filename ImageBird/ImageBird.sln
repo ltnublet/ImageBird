@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageBird.Tests", "ImageBir
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{D481A19C-9A6C-44E2-9970-A3BC42C89819}"
 	ProjectSection(SolutionItems) = preProject
+		GPU\Cudafy.NET.dll = GPU\Cudafy.NET.dll
+		GPU\Cudafy.NET.xml = GPU\Cudafy.NET.xml
 		Settings.StyleCop = Settings.StyleCop
 	EndProjectSection
 EndProject
