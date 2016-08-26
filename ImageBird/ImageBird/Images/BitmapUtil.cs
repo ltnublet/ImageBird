@@ -49,5 +49,27 @@ namespace ImageBird.Images
 
             return returnValue;
         }
+
+        /// <summary>
+        /// Determines whether the specified Bitmap's RGB representations are equivalent.
+        /// </summary>
+        /// <param name="left">The first bitmap.</param>
+        /// <param name="right">The second bitmap.</param>
+        /// <returns>True if equivalent, and false otherwise.</returns>
+        public static bool ContentsEqual(this Bitmap left, Bitmap right)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Performs a Deriche 0th-order blur operation. (Gaussian blur approximation).
+        /// </summary>
+        /// <param name="image">The image to blur.</param>
+        /// <param name="sigma">The coefficient by which the image should be blurred.</param>
+        /// <returns>The resulting blurred image.</returns>
+        public static Bitmap Blur(this Bitmap image, double sigma)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

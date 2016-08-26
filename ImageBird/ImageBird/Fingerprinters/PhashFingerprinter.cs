@@ -23,9 +23,10 @@ namespace ImageBird.Fingerprinters
             throw new NotImplementedException();
         }
 
-        private void DigestImage(Bitmap image)
+        private void DigestImage(Bitmap image, double sigma)
         {
             Bitmap grayscale = image.ToGrayscale();
+            grayscale = grayscale.Blur(sigma);
         }
     }
 }

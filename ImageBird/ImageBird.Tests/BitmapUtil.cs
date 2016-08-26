@@ -35,5 +35,23 @@ namespace ImageBird.Tests
                 }
             }
         }
+
+        /// <summary>
+        /// Test the ContentsEqual method with valid (non-malformed) Bitmap objects.
+        /// </summary>
+        [Fact]
+        public void ContentsEqual_MatchingImages_ShouldSucceed()
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Test the Blur method with a valid (non-malformed) Bitmap object.
+        /// </summary>
+        [Fact]
+        public void Blur_ValidImage_ShouldSucceed()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

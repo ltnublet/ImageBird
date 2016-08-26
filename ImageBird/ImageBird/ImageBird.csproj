@@ -53,6 +53,7 @@
     <Compile Include="Fingerprinters\SiftFingerprinter.cs" />
     <Compile Include="Fingerprinters\SurfFingerprinter.cs" />
     <Compile Include="Images\BitmapUtil.cs" />
+    <Compile Include="Images\Picture.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup />
