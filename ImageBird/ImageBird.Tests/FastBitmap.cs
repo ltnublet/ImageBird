@@ -41,5 +41,19 @@ namespace ImageBird.Tests
             SUT.FastBitmap expected = new SUT.FastBitmap(new Bitmap(Image.FromFile(FastBitmap.TestData1_KnownGood)));
             expected.Dispose();
         }
+
+        [Fact]
+        public void Grayscale_ValidBitmap_ShouldSucceed()
+        {
+            Bitmap expected = new Bitmap(Image.FromFile(FastBitmap.TestData1_GrayScale_KnownGood));
+            Bitmap notExpected = new Bitmap(Image.FromFile(FastBitmap.TestData1_GrayScale_KnownBad));
+
+            SUT.FastBitmap actual = new SUT.FastBitmap(new Bitmap(Image.FromFile(FastBitmap.TestData1_KnownGood)));
+
+            actual.ToGrayscale();
+
+            Assert.True(TestUtil.ContentsEqual(expected, actual.Buffer));
+            Assert.False(TestUtil.ContentsEqual(notExpected, actual.Buffer));
+        }
     }
 }

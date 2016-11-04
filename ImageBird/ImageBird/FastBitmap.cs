@@ -14,6 +14,12 @@ namespace ImageBird
     public class FastBitmap : IDisposable
     {
         /// <summary>
+        /// We cache the bits per pixel on instantiation - it's inordinately expensive to compute, and won't
+        /// change for the lifetime of the FastBitmap instance.
+        /// </summary>
+        private readonly int bitsPerPixel;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="FastBitmap"/> class.
         /// </summary>
         /// <param name="bitmap">
@@ -28,28 +34,40 @@ namespace ImageBird
 
             if (bitmap.Height == 0 || bitmap.Width == 0)
             {
-                throw new ArgumentException("Supplied bitmap has invalid dimensions.", nameof(bitmap));
+                throw new ArgumentException(Properties.Resources.SuppliedBitmapHasInvalidDimensions, nameof(bitmap));
             }
 
             this.Buffer = (Bitmap)bitmap.Clone();
+            this.Original = (Bitmap)bitmap.Clone();
+            this.bitsPerPixel = Image.GetPixelFormatSize(this.Buffer.PixelFormat);
         }
 
         /// <summary>
-        /// Used to perform an action on a pixel.
+        /// Performs a locking data operation on the supplied BitmapData object.
         /// </summary>
-        /// <param name="pointer">
-        /// A pointer to the first address of the pixel's data.
+        /// <param name="data">
+        /// The BitmapData.
         /// </param>
         /// <param name="bitsPerPixel">
-        /// The number of bits per pixel.
+        /// The bits per pixel of the bitmap.
         /// </param>
-        protected unsafe delegate void PixelAction(byte* pointer, int bitsPerPixel);
+        /// <param name="scan0">
+        /// The base address.
+        /// </param>
+        protected unsafe delegate void LockingDataOperation(BitmapData data, byte* scan0);
+        
+        private unsafe delegate void ToGrayscaleOperation(byte* scan0);
 
         /// <summary>
         /// Bitmap to which specified changes will be applied.
         /// </summary>
         public Bitmap Buffer { get; protected set; }
 
+        /// <summary>
+        /// A clone of the original bitmap supplied at instantiation.
+        /// </summary>
+        public Bitmap Original { get; protected set; }
+        
         /// <summary>
         /// Disposes the FastBitmap, freeing it's resources.
         /// </summary>
@@ -59,31 +77,55 @@ namespace ImageBird
         }
 
         /// <summary>
+        /// Converts the Buffer to grayscale.
+        /// </summary>
+        public unsafe void ToGrayscale()
+        {
+            throw new NotImplementedException("Need ToGrayscaleOperations for common color depths.");
+
+            ToGrayscaleOperation grayscale = scan0 =>
+                {
+                    int valR = *scan0;
+                    int valG = *(scan0 + 1);
+                    int valB = *(scan0 + 2);
+
+                    byte avg = (byte)((float)(valR + valG + valB) / 3f);
+
+                    *scan0 = avg;
+                    *(scan0 + 1) = avg;
+                    *(scan0 + 2) = avg;
+                };
+
+            this.Operation(delegate(BitmapData data, byte* scan0)
+            {
+                for (int yPos = 0; yPos < data.Height; ++yPos)
+                {
+                    for (int xPos = 0; xPos < data.Width; ++xPos)
+                    {
+                        byte* pixel = scan0 + (yPos * data.Stride) + ((xPos * this.bitsPerPixel) / 8);
+
+                        grayscale(pixel);
+                    }
+                }
+            });
+        }
+
+        /// <summary>
         /// Performs the supplied operation on each pixel in the buffer.
         /// </summary>
         /// <param name="operation">
         /// The operation to perform on each pixel.
         /// </param>
-        protected unsafe void Operation(PixelAction operation)
+        protected unsafe void Operation(LockingDataOperation operation)
         {
             BitmapData contents = this.Buffer.LockBits(
                 new Rectangle(0, 0, this.Buffer.Width, this.Buffer.Height),
                 ImageLockMode.ReadOnly,
                 this.Buffer.PixelFormat);
 
-            int bitsPerPixel = Image.GetPixelFormatSize(this.Buffer.PixelFormat);
-
             byte* scan0 = (byte*)contents.Scan0.ToPointer();
 
-            for (int yPos = 0; yPos < contents.Height; yPos++)
-            {
-                for (int xPos = 0; xPos < contents.Width; xPos++)
-                {
-                    byte* data = scan0 + (yPos * contents.Stride) + ((xPos * bitsPerPixel) / 8);
-
-                    operation(data, bitsPerPixel);
-                }
-            }
+            operation(contents, scan0);
 
             this.Buffer.UnlockBits(contents);
         }
