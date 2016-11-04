@@ -66,8 +66,7 @@
     <Otherwise />
   </Choose>
   <ItemGroup>
-    <Compile Include="Fingerprinting.cs" />
-    <Compile Include="BitmapUtil.cs" />
+    <Compile Include="FastBitmap.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
