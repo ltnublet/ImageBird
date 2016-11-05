@@ -81,9 +81,12 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
-    <Content Include="Resources\TestData1_Grayscale_KnownBad.png" />
     <Content Include="Resources\TestData1_Grayscale_KnownGood.png" />
     <Content Include="Resources\TestData1_KnownGood.png" />
+    <Content Include="Resources\TestData2_Grayscale_KnownGood.png" />
+    <Content Include="Resources\TestData2_KnownGood.png" />
+    <Content Include="Resources\TestData3_Grayscale_KnownGood.gif" />
+    <Content Include="Resources\TestData3_KnownGood.gif" />
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">

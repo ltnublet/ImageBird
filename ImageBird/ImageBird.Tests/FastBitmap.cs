@@ -21,7 +21,10 @@ namespace ImageBird.Tests
         private const string ResourcePath = @"..\..\Resources\";
         private const string TestData1_KnownGood = ResourcePath + "TestData1_KnownGood.png";
         private const string TestData1_GrayScale_KnownGood = ResourcePath + "TestData1_GrayScale_KnownGood.png";
-        private const string TestData1_GrayScale_KnownBad = ResourcePath + "TestData1_GrayScale_KnownBad.png";
+        private const string TestData2_KnownGood = ResourcePath + "TestData2_KnownGood.png";
+        private const string TestData2_GrayScale_KnownGood = ResourcePath + "TestData2_GrayScale_KnownGood.png";
+        private const string TestData3_KnownGood = ResourcePath + "TestData3_KnownGood.gif";
+        private const string TestData3_GrayScale_KnownGood = ResourcePath + "TestData3_GrayScale_KnownGood.gif";
 
         [Fact]
         public void FastBitmap_NullBitmap_ThrowsArgumentNull()
@@ -43,12 +46,40 @@ namespace ImageBird.Tests
         }
 
         [Fact]
-        public void Grayscale_ValidBitmap_ShouldSucceed()
+        public void Grayscale_32BitColorDepth_ShouldSucceed()
         {
             Bitmap expected = new Bitmap(Image.FromFile(FastBitmap.TestData1_GrayScale_KnownGood));
-            Bitmap notExpected = new Bitmap(Image.FromFile(FastBitmap.TestData1_GrayScale_KnownBad));
+            Bitmap notExpected = new Bitmap(Image.FromFile(FastBitmap.TestData1_KnownGood));
 
             SUT.FastBitmap actual = new SUT.FastBitmap(new Bitmap(Image.FromFile(FastBitmap.TestData1_KnownGood)));
+
+            actual.ToGrayscale();
+
+            Assert.True(TestUtil.ContentsEqual(expected, actual.Buffer));
+            Assert.False(TestUtil.ContentsEqual(notExpected, actual.Buffer));
+        }
+
+        [Fact]
+        public void Grayscale_24BitColorDepth_ShouldSucceed()
+        {
+            Bitmap expected = new Bitmap(Image.FromFile(FastBitmap.TestData2_GrayScale_KnownGood));
+            Bitmap notExpected = new Bitmap(Image.FromFile(FastBitmap.TestData2_KnownGood));
+
+            SUT.FastBitmap actual = new SUT.FastBitmap(new Bitmap(Image.FromFile(FastBitmap.TestData2_KnownGood)));
+
+            actual.ToGrayscale();
+
+            Assert.True(TestUtil.ContentsEqual(expected, actual.Buffer));
+            Assert.False(TestUtil.ContentsEqual(notExpected, actual.Buffer));
+        }
+
+        [Fact]
+        public void Grayscale_8BitColorDepth_ShouldSucceed()
+        {
+            Bitmap expected = new Bitmap(Image.FromFile(FastBitmap.TestData3_GrayScale_KnownGood));
+            Bitmap notExpected = new Bitmap(Image.FromFile(FastBitmap.TestData3_KnownGood));
+
+            SUT.FastBitmap actual = new SUT.FastBitmap(new Bitmap(Image.FromFile(FastBitmap.TestData3_KnownGood)));
 
             actual.ToGrayscale();
 

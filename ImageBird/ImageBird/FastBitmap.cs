@@ -48,9 +48,6 @@ namespace ImageBird
         /// <param name="data">
         /// The BitmapData.
         /// </param>
-        /// <param name="bitsPerPixel">
-        /// The bits per pixel of the bitmap.
-        /// </param>
         /// <param name="scan0">
         /// The base address.
         /// </param>
@@ -81,20 +78,29 @@ namespace ImageBird
         /// </summary>
         public unsafe void ToGrayscale()
         {
-            throw new NotImplementedException("Need ToGrayscaleOperations for common color depths.");
+            // TODO: Resolve whether checking the bpp has any impact - it looks like the Bitmap class
+            // will read in bitmaps of arbitrary color depth, but expose them as having 32bpp. Since
+            // we don't save the outputs, the behaviour is equivalent.
+            ToGrayscaleOperation grayscale = null;
+            switch (this.bitsPerPixel)
+            {
+                case 32:
+                    grayscale = scan0 =>
+                    {
+                        int valR = *scan0;
+                        int valG = *(scan0 + 1);
+                        int valB = *(scan0 + 2);
 
-            ToGrayscaleOperation grayscale = scan0 =>
-                {
-                    int valR = *scan0;
-                    int valG = *(scan0 + 1);
-                    int valB = *(scan0 + 2);
+                        byte avg = (byte)((float)(valR + valG + valB) / 3f);
 
-                    byte avg = (byte)((float)(valR + valG + valB) / 3f);
-
-                    *scan0 = avg;
-                    *(scan0 + 1) = avg;
-                    *(scan0 + 2) = avg;
-                };
+                        *scan0 = avg;
+                        *(scan0 + 1) = avg;
+                        *(scan0 + 2) = avg;
+                    };
+                    break;
+                default:
+                    throw new NotImplementedException("Unsupported image color depth.");
+            }
 
             this.Operation(delegate(BitmapData data, byte* scan0)
             {
