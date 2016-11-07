@@ -61,11 +61,29 @@ namespace ImageBird.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Specified file did not exist..
+        /// </summary>
+        public static string SpecifiedFileDidNotExist {
+            get {
+                return ResourceManager.GetString("SpecifiedFileDidNotExist", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Supplied bitmap has invalid dimensions..
         /// </summary>
         public static string SuppliedBitmapHasInvalidDimensions {
             get {
                 return ResourceManager.GetString("SuppliedBitmapHasInvalidDimensions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unsupported image color depth..
+        /// </summary>
+        public static string UnsupportedImageColorDepth {
+            get {
+                return ResourceManager.GetString("UnsupportedImageColorDepth", resourceCulture);
             }
         }
     }

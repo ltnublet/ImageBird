@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ImageBird.Properties;
 
 namespace ImageBird
 {
@@ -64,7 +66,83 @@ namespace ImageBird
         /// A clone of the original bitmap supplied at instantiation.
         /// </summary>
         public Bitmap Original { get; protected set; }
-        
+
+        /// <summary>
+        /// Creates a FastBitmap from the specified file.
+        /// </summary>
+        /// <param name="path">
+        /// The path to the file.
+        /// </param>
+        /// <returns>
+        /// The FastBitmap created from the file.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Occurs when the supplied path is null.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// Occurs when the supplied path does not point to a valid Bitmap.
+        /// </exception>
+        public static FastBitmap FromFile(string path)
+        {
+            if (path == null)
+            {
+                throw new ArgumentNullException(nameof(path));
+            }
+
+            if (!File.Exists(path))
+            {
+                throw new ArgumentException(Resources.SpecifiedFileDidNotExist, nameof(path));
+            }
+
+            return new FastBitmap(new Bitmap(Image.FromFile(path)));
+        }
+
+        /// <summary>
+        /// Performs a gaussian blur on the buffer using the specified sigma and weight.
+        /// </summary>
+        /// <param name="sigma">
+        /// The factor by which to blur. Larger sigmas produce greater blurring.
+        /// </param>
+        /// <param name="weight">
+        /// The size of the kernel. Larger weights produce greater blurring.
+        /// </param>
+        public void Blur(float sigma, int weight)
+        {
+            if (weight < 1 || weight % 2 == 0)
+            {
+                throw new ArgumentException(nameof(weight));
+            }
+
+            float[,] kernel = new float[weight, weight];
+            float avg = weight / 2f;
+            float sum = 0f;
+
+            for (int x = 0; x < weight; x++)
+            {
+                for (int y = 0; y < weight; y++)
+                {
+                    kernel[x, y] =
+                        (float)
+                        Math.Exp(
+                            -0.5f
+                            * (Math.Pow(((float)(x)-avg) / sigma, 2f) + Math.Pow(((float)(y)-avg) / sigma, 2f)))
+                        / (float)(2f * Math.PI * sigma * sigma);
+
+                    sum += kernel[x, y];
+                }
+            }
+
+            for (int x = 0; x < weight; x++)
+            {
+                for (int y = 0; y < weight; y++)
+                {
+                    kernel[x, y] /= sum;
+                }
+            }
+
+            this.KernelOperation(kernel);
+        }
+
         /// <summary>
         /// Disposes the FastBitmap, freeing it's resources.
         /// </summary>
@@ -99,10 +177,10 @@ namespace ImageBird
                     };
                     break;
                 default:
-                    throw new NotImplementedException("Unsupported image color depth.");
+                    throw new NotImplementedException(Resources.UnsupportedImageColorDepth);
             }
 
-            this.Operation(delegate(BitmapData data, byte* scan0)
+            this.Operation((data, scan0) =>
             {
                 for (int yPos = 0; yPos < data.Height; ++yPos)
                 {
@@ -113,6 +191,21 @@ namespace ImageBird
                         grayscale(pixel);
                     }
                 }
+            });
+        }
+
+        /// <summary>
+        /// Applies the supplied kernel to the buffer.
+        /// </summary>
+        /// <param name="kernel">
+        /// The kernel to apply. Assumed to be square and of odd dimensions.
+        /// </param>
+        protected unsafe void KernelOperation(float[,] kernel)
+        {
+            int dimension = (int)Math.Sqrt(kernel.Length);
+
+            this.Operation((data, scan0) =>
+            {
             });
         }
 
@@ -131,9 +224,14 @@ namespace ImageBird
 
             byte* scan0 = (byte*)contents.Scan0.ToPointer();
 
-            operation(contents, scan0);
-
-            this.Buffer.UnlockBits(contents);
+            try
+            {
+                operation(contents, scan0);
+            }
+            finally
+            {
+                this.Buffer.UnlockBits(contents);
+            }
         }
     }
 }
