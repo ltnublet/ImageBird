@@ -106,41 +106,9 @@ namespace ImageBird
         /// <param name="weight">
         /// The size of the kernel. Larger weights produce greater blurring.
         /// </param>
-        public void Blur(float sigma, int weight)
+        public void Blur(double sigma, int weight)
         {
-            if (weight < 1 || weight % 2 == 0)
-            {
-                throw new ArgumentException(nameof(weight));
-            }
-
-            float[,] kernel = new float[weight, weight];
-            float avg = weight / 2f;
-            float sum = 0f;
-
-            for (int x = 0; x < weight; x++)
-            {
-                for (int y = 0; y < weight; y++)
-                {
-                    kernel[x, y] =
-                        (float)
-                        Math.Exp(
-                            -0.5f
-                            * (Math.Pow(((float)(x)-avg) / sigma, 2f) + Math.Pow(((float)(y)-avg) / sigma, 2f)))
-                        / (float)(2f * Math.PI * sigma * sigma);
-
-                    sum += kernel[x, y];
-                }
-            }
-
-            for (int x = 0; x < weight; x++)
-            {
-                for (int y = 0; y < weight; y++)
-                {
-                    kernel[x, y] /= sum;
-                }
-            }
-
-            this.KernelOperation(kernel);
+            this.KernelOperation(Kernel.Gaussian(sigma, weight));
         }
 
         /// <summary>
@@ -169,7 +137,7 @@ namespace ImageBird
                         int valG = *(scan0 + 1);
                         int valB = *(scan0 + 2);
 
-                        byte avg = (byte)((float)(valR + valG + valB) / 3f);
+                        byte avg = (byte)((double)(valR + valG + valB) / 3D);
 
                         *scan0 = avg;
                         *(scan0 + 1) = avg;
@@ -182,9 +150,9 @@ namespace ImageBird
 
             this.Operation((data, scan0) =>
             {
-                for (int yPos = 0; yPos < data.Height; ++yPos)
+                for (int yPos = 0; yPos < data.Height; yPos++)
                 {
-                    for (int xPos = 0; xPos < data.Width; ++xPos)
+                    for (int xPos = 0; xPos < data.Width; xPos++)
                     {
                         byte* pixel = scan0 + (yPos * data.Stride) + ((xPos * this.bitsPerPixel) / 8);
 
@@ -200,17 +168,16 @@ namespace ImageBird
         /// <param name="kernel">
         /// The kernel to apply. Assumed to be square and of odd dimensions.
         /// </param>
-        protected unsafe void KernelOperation(float[,] kernel)
+        protected unsafe void KernelOperation(Kernel kernel)
         {
-            int dimension = (int)Math.Sqrt(kernel.Length);
-
             this.Operation((data, scan0) =>
-            {
-            });
+                {
+                    // Asdf.
+                });
         }
 
         /// <summary>
-        /// Performs the supplied operation on each pixel in the buffer.
+        /// Performs the supplied operation on the Buffer.
         /// </summary>
         /// <param name="operation">
         /// The operation to perform on each pixel.

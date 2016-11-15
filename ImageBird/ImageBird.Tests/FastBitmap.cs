@@ -22,7 +22,7 @@ namespace ImageBird.Tests
 
         private const string TestData1_KnownGood = ResourcePath + "TestData1_KnownGood.png";
         private const string TestData1_GrayScale_KnownGood = ResourcePath + "TestData1_GrayScale_KnownGood.png";
-        private const string TestData1_BlurSigma1Weight5_KnownGood = ResourcePath + "TestData1_KnownGood.png";
+        private const string TestData1_BlurSigma1Weight5_KnownGood = ResourcePath + "TestData2_KnownGood.png";
         private const string TestData2_KnownGood = ResourcePath + "TestData2_KnownGood.png";
         private const string TestData2_GrayScale_KnownGood = ResourcePath + "TestData2_GrayScale_KnownGood.png";
         private const string TestData3_KnownGood = ResourcePath + "TestData3_KnownGood.gif";
@@ -52,16 +52,17 @@ namespace ImageBird.Tests
         [Fact]
         public void Blur_InvalidWeight_ThrowsArgument()
         {
-            Assert.Throws<ArgumentException>(() => SUT.FastBitmap.FromFile(FastBitmap.TestData1_KnownGood).Blur(1f, 0));
+            Assert.Throws<ArgumentException>(() => 
+            SUT.FastBitmap.FromFile(FastBitmap.TestData1_KnownGood).Blur(1f, 0));
         }
 
-        [Fact]
+        [Fact(Skip = "Test won't be implemented until Kernel.Gaussian is finished.")]
         public void Blur_ValidWeight_ShouldSucceed()
         {
             ////Bitmap expected = (Bitmap)(Image.FromFile(FastBitmap.TestData1_BlurSigma1Weight5_KnownGood));
 
             SUT.FastBitmap actual = SUT.FastBitmap.FromFile(FastBitmap.TestData1_KnownGood);
-            actual.Blur(1f, 5);
+            actual.Blur(1f, 3);
 
             throw new NotImplementedException();
 

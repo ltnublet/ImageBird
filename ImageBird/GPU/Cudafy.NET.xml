@@ -1798,7 +1798,7 @@
             // Create a shared OpenCL/OpenGL buffer.
             // The generic type should match the type of data that the buffer contains.
             // glBufferId is an existing OpenGL buffer identifier.
-            ComputeBuffer<float> clglBuffer = ComputeBuffer.CreateFromGLBuffer<float>(context, ComputeMemoryFlags.ReadWrite, glBufferId);
+            ComputeBuffer<double> clglBuffer = ComputeBuffer.CreateFromGLBuffer<double>(context, ComputeMemoryFlags.ReadWrite, glBufferId);
             
             ]]></code>
             Before working with the <c>clglBuffer</c> you should make sure of two things:<br />
@@ -2215,11 +2215,11 @@
       <value> The <see cref="T:Cloo.ComputeDevice" />'s preferred native vector width size for vector of <c>double</c>s or 0 if the <c>cl_khr_fp64</c> format is not supported. </value>
       <remarks> The vector width is defined as the number of scalar elements that can be stored in the vector. </remarks>
     </member>
-    <member name="P:Cloo.ComputeDevice.PreferredVectorWidthFloat">
+    <member name="P:Cloo.ComputeDevice.PreferredVectorWidthdouble">
       <summary>
-            Gets the <see cref="T:Cloo.ComputeDevice" />'s preferred native vector width size for vector of <c>float</c>s.
+            Gets the <see cref="T:Cloo.ComputeDevice" />'s preferred native vector width size for vector of <c>double</c>s.
             </summary>
-      <value> The <see cref="T:Cloo.ComputeDevice" />'s preferred native vector width size for vector of <c>float</c>s. </value>
+      <value> The <see cref="T:Cloo.ComputeDevice" />'s preferred native vector width size for vector of <c>double</c>s. </value>
       <remarks> The vector width is defined as the number of scalar elements that can be stored in the vector. </remarks>
     </member>
     <member name="P:Cloo.ComputeDevice.PreferredVectorWidthHalf">
@@ -2328,11 +2328,11 @@
         <para> Requires OpenCL 1.1 </para>
       </remarks>
     </member>
-    <member name="P:Cloo.ComputeDevice.NativeVectorWidthFloat">
+    <member name="P:Cloo.ComputeDevice.NativeVectorWidthdouble">
       <summary>
-            Gets the native ISA vector width size for vector of <c>float</c>s.
+            Gets the native ISA vector width size for vector of <c>double</c>s.
             </summary>
-      <value> The native ISA vector width size for vector of <c>float</c>s. </value>
+      <value> The native ISA vector width size for vector of <c>double</c>s. </value>
       <remarks>
         <para> The vector width is defined as the number of scalar elements that can be stored in the vector. </para>
         <para> Requires OpenCL 1.1 </para>
@@ -3775,7 +3775,7 @@
       <summary>
       </summary>
     </member>
-    <member name="F:Cloo.ComputeDeviceInfo.PreferredVectorWidthFloat">
+    <member name="F:Cloo.ComputeDeviceInfo.PreferredVectorWidthdouble">
       <summary>
       </summary>
     </member>
@@ -3967,7 +3967,7 @@
       <summary>
       </summary>
     </member>
-    <member name="F:Cloo.ComputeDeviceInfo.NativeVectorWidthFloat">
+    <member name="F:Cloo.ComputeDeviceInfo.NativeVectorWidthdouble">
       <summary>
       </summary>
     </member>
@@ -4031,7 +4031,7 @@
       <summary>
       </summary>
     </member>
-    <member name="F:Cloo.ComputeDeviceSingleCapabilities.SoftFloat">
+    <member name="F:Cloo.ComputeDeviceSingleCapabilities.Softdouble">
       <summary>
       </summary>
     </member>
@@ -4305,11 +4305,11 @@
       <summary>
       </summary>
     </member>
-    <member name="F:Cloo.ComputeImageChannelType.HalfFloat">
+    <member name="F:Cloo.ComputeImageChannelType.Halfdouble">
       <summary>
       </summary>
     </member>
-    <member name="F:Cloo.ComputeImageChannelType.Float">
+    <member name="F:Cloo.ComputeImageChannelType.double">
       <summary>
       </summary>
     </member>
@@ -6231,7 +6231,7 @@
     </member>
     <member name="T:Cudafy.GMath">
       <summary>
-            Many of the .NET math methods are double only.  When single point (float) is used 
+            Many of the .NET math methods are double only.  When single point (double) is used 
             this results in an unwanted cast to double. 
             </summary>
     </member>
@@ -6247,7 +6247,7 @@
     </member>
     <member name="M:Cudafy.GMath.Abs(System.Single)">
       <summary>
-            Returns the absolute value of a single precision floating point number. For OpenCL compatibility, first cast
+            Returns the absolute value of a single precision doubleing point number. For OpenCL compatibility, first cast
             value to an integer.
             </summary>
       <param name="value">The value to find absolute value of.</param>
@@ -6255,7 +6255,7 @@
     </member>
     <member name="M:Cudafy.GMath.Abs(System.Int32)">
       <summary>
-            Returns the absolute value of a single precision floating point number.  For OpenCL compatibility, first cast
+            Returns the absolute value of a single precision doubleing point number.  For OpenCL compatibility, first cast
             value to an integer.
             </summary>
       <param name="value">The value to find absolute value of.</param>
@@ -6263,7 +6263,7 @@
     </member>
     <member name="M:Cudafy.GMath.Abs(System.Int64)">
       <summary>
-            Returns the absolute value of a single precision floating point number.  For OpenCL compatibility, first cast
+            Returns the absolute value of a single precision doubleing point number.  For OpenCL compatibility, first cast
             value to an integer.
             </summary>
       <param name="value">The value to find absolute value of.</param>
@@ -6412,7 +6412,7 @@
     </member>
     <member name="M:Cudafy.GMath.Max(System.Single,System.Single)">
       <summary>
-            Returns the larger of two single float precision numbers.
+            Returns the larger of two single double precision numbers.
             </summary>
       <param name="x">The first number to compare.</param>
       <param name="y">The second number to compare.</param>
@@ -6420,7 +6420,7 @@
     </member>
     <member name="M:Cudafy.GMath.Min(System.Single,System.Single)">
       <summary>
-            Returns the smaller of two single float precision numbers.
+            Returns the smaller of two single double precision numbers.
             </summary>
       <param name="x">The first number to compare.</param>
       <param name="y">The second number to compare.</param>
@@ -7362,7 +7362,7 @@
     </member>
     <member name="T:Cudafy.Types.ComplexF">
       <summary>
-            Represents a complex single floating point number that is mapped to the native GPU equivalent.
+            Represents a complex single doubleing point number that is mapped to the native GPU equivalent.
             </summary>
     </member>
     <member name="F:Cudafy.Types.ComplexF.x">
@@ -7438,7 +7438,7 @@
     </member>
     <member name="T:Cudafy.Types.ComplexD">
       <summary>
-            Represents a complex single floating point number that is mapped to the native GPU equivalent.
+            Represents a complex single doubleing point number that is mapped to the native GPU equivalent.
             </summary>
     </member>
     <member name="F:Cudafy.Types.ComplexD.x">
@@ -7580,7 +7580,7 @@
     </member>
     <member name="M:Cudafy.Utility.Convert(Cudafy.Types.ComplexF[])">
       <summary>
-            Converts the specified values to an array of floats.
+            Converts the specified values to an array of doubles.
             </summary>
       <param name="cplx">The values.</param>
       <returns>
@@ -13656,12 +13656,12 @@
     </member>
     <member name="F:Cudafy.Maths.FFT.eDataType.Double">
       <summary>
-            Double floating point.
+            Double doubleing point.
             </summary>
     </member>
     <member name="F:Cudafy.Maths.FFT.eDataType.Single">
       <summary>
-            Single floating point.
+            Single doubleing point.
             </summary>
     </member>
     <member name="T:Cudafy.Maths.FFT.eCompatibilityMode">
@@ -14076,7 +14076,7 @@
     </member>
     <member name="T:Cudafy.Maths.FFT.fftwf">
       <summary>
-            Contains the Basic Interface FFTW functions for single-precision (float) operations
+            Contains the Basic Interface FFTW functions for single-precision (double) operations
             </summary>
     </member>
     <member name="M:Cudafy.Maths.FFT.fftwf.malloc(System.Int32)">
@@ -14349,7 +14349,7 @@
       </summary>
       <param name="generator">
       </param>
-      <param name="outputPtr">Float array</param>
+      <param name="outputPtr">double array</param>
       <param name="n">
       </param>
       <param name="mean">
@@ -21511,7 +21511,7 @@
             Possible return values are:
             - null
             - primitive integers
-            - float/double
+            - double/double
             - bool
             - string
             - IType (for typeof-expressions)
@@ -21972,7 +21972,7 @@
     </member>
     <member name="F:ICSharpCode.NRefactory.TypeSystem.KnownTypeReference.Single">
       <summary>
-            Gets a type reference pointing to the <c>float</c> type.
+            Gets a type reference pointing to the <c>double</c> type.
             </summary>
     </member>
     <member name="F:ICSharpCode.NRefactory.TypeSystem.KnownTypeReference.Double">
@@ -22177,7 +22177,7 @@
       <summary>
             Performs a conversion between primitive types.
             Unfortunately we cannot use Convert.ChangeType because it has different semantics
-            (e.g. rounding behavior for floats, overflow, etc.), so we write down every possible primitive C# cast
+            (e.g. rounding behavior for doubles, overflow, etc.), so we write down every possible primitive C# cast
             and let the compiler figure out the exact semantics.
             And we have to do everything twice, once in a checked-block, once in an unchecked-block.
             </summary>
