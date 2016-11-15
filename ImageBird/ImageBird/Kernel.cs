@@ -59,29 +59,31 @@ namespace ImageBird
             }
 
             double[,] kernel = new double[weight, weight];
-            double avg = weight / 2f;
-            double sum = 0f;
 
-            for (int x = 0; x < weight; x++)
+            double sigmaSquared = sigma * sigma;
+            double euler = 1D / (2D * Math.PI * sigmaSquared);
+            double sum = 0;
+            int center = weight / 2;
+
+            for (int yPos = -center; yPos <= center; yPos++)
             {
-                for (int y = 0; y < weight; y++)
+                for (int xPos = -center; xPos <= center; xPos++)
                 {
-                    kernel[x, y] =
-                        (double)
-                        Math.Exp(
-                            -0.5f
-                            * (Math.Pow(((double)(x)-avg) / sigma, 2D) + Math.Pow(((double)(y)-avg) / sigma, 2D)))
-                        / (double)(2f * Math.PI * sigma * sigma);
+                    int actualY = yPos + center;
+                    int actualX = xPos + center;
 
-                    sum += kernel[x, y];
+                    double value = euler * Math.Exp(-((xPos * xPos) + (yPos * yPos)) / (2 * sigmaSquared));
+
+                    kernel[actualY, actualX] = value;
+                    sum += value;
                 }
             }
 
-            for (int x = 0; x < weight; x++)
+            for (int yPos = 0; yPos < weight; yPos++)
             {
-                for (int y = 0; y < weight; y++)
+                for (int xPos = 0; xPos < weight; xPos++)
                 {
-                    kernel[x, y] /= sum;
+                    kernel[yPos, xPos] /= sum;
                 }
             }
 

@@ -56,13 +56,13 @@ namespace ImageBird.Tests
             SUT.FastBitmap.FromFile(FastBitmap.TestData1_KnownGood).Blur(1f, 0));
         }
 
-        [Fact(Skip = "Test won't be implemented until Kernel.Gaussian is finished.")]
+        [Fact]
         public void Blur_ValidWeight_ShouldSucceed()
         {
             ////Bitmap expected = (Bitmap)(Image.FromFile(FastBitmap.TestData1_BlurSigma1Weight5_KnownGood));
 
             SUT.FastBitmap actual = SUT.FastBitmap.FromFile(FastBitmap.TestData1_KnownGood);
-            actual.Blur(1f, 3);
+            actual.Blur(1D, 5);
 
             throw new NotImplementedException();
 

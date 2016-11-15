@@ -92,6 +92,8 @@ namespace ImageBird.Tests
         /// <returns></returns>
         public static bool TruncatedContentsEqual(double[,] expected, SUT.Kernel actual, int truncateAt)
         {
+            throw new NotImplementedException("This probably works, but hasn't been checked by a test.");
+
             if (expected == null)
             {
                 throw new ArgumentNullException(nameof(expected));
@@ -114,7 +116,7 @@ namespace ImageBird.Tests
             }
 
             double truncateBy = (double)calculateTruncation;
-            
+
             return !expected.Cast<double>()
                 .Select(x => x - (x % truncateBy))
                 .Except(actual.Contents.Cast<double>().Select(y => y - (y % truncateBy)))

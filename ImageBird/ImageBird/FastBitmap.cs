@@ -10,6 +10,8 @@ using ImageBird.Properties;
 
 namespace ImageBird
 {
+    using global::System.Diagnostics.CodeAnalysis;
+
     /// <summary>
     /// A Bitmap implementation with improved performance.
     /// </summary>
@@ -168,12 +170,84 @@ namespace ImageBird
         /// <param name="kernel">
         /// The kernel to apply. Assumed to be square and of odd dimensions.
         /// </param>
+        [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1115:ParameterMustFollowComma", Justification = "Unecessary indentation reduces readability due to the high nesting of loops.")]
+        [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1116:SplitParametersMustStartOnLineAfterDeclaration", Justification = "Unecessary indentation reduces readability due to the high nesting of loops.")]
+        [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1117:ParametersMustBeOnSameLineOrSeparateLines", Justification = "Unecessary indentation reduces readability due to the high nesting of loops.")]
         protected unsafe void KernelOperation(Kernel kernel)
         {
+            Rectangle cropRect = new Rectangle(
+                kernel.Center,
+                kernel.Center,
+                this.Buffer.Width - kernel.Center,
+                this.Buffer.Height - kernel.Center);
+
+            Bitmap subBuffer = new Bitmap(cropRect.Width, cropRect.Height);
+
+            using (Graphics graphics = Graphics.FromImage(subBuffer))
+            {
+                graphics.DrawImage(
+                    this.Buffer,
+                    new Rectangle(0, 0, subBuffer.Width, subBuffer.Height),
+                    cropRect,
+                    GraphicsUnit.Pixel);
+            }
+
             this.Operation((data, scan0) =>
+            {
+                BitmapData subContents = subBuffer.LockBits(
+                    new Rectangle(0, 0, subBuffer.Width, subBuffer.Height),
+                    ImageLockMode.ReadOnly,
+                    subBuffer.PixelFormat);
+
+                byte* subScan0 = (byte*)subContents.Scan0.ToPointer();
+
+                try
                 {
-                    // Asdf.
-                });
+                    Parallel.For(kernel.Center, data.Height - kernel.Center, yPos =>
+                    {
+                        Parallel.For(kernel.Center, data.Width - kernel.Center, xPos =>
+                        {
+                            byte* current = 
+                                subScan0 + 
+                                ((yPos - kernel.Center) * data.Stride) + 
+                                (((xPos - kernel.Center) * this.bitsPerPixel) / 8);
+
+                            double newR = 0D;
+                            double newG = 0D;
+                            double newB = 0D;
+
+                            for (int localY = -kernel.Center; localY <= kernel.Center; localY++)
+                            {
+                                for (int localX = -kernel.Center; localX <= kernel.Center; localX++)
+                                {
+                                    double scaling = kernel.Contents[localY + kernel.Center, localX + kernel.Center];
+
+                                    byte* local =
+                                        scan0 +
+                                        ((yPos + localY) * data.Stride) +
+                                        (((xPos + localX) * this.bitsPerPixel) / 8);
+
+                                    newR += ((double)(*scan0)) * scaling;
+                                    newG += ((double)(*(scan0 + 1))) * scaling;
+                                    newB += ((double)(*(scan0 + 2))) * scaling;
+                                }
+                            }
+
+                            *current = (byte)newR;
+                            *(current + 1) = (byte)newG;
+                            *(current + 2) = (byte)newB;
+                        });
+                    });
+                }
+                finally
+                {
+                    subBuffer.UnlockBits(subContents);
+                }
+            });
+
+            Bitmap disposer = this.Buffer;
+            this.Buffer = subBuffer;
+            disposer.Dispose();
         }
 
         /// <summary>
