@@ -124,6 +124,10 @@ namespace ImageBird
         /// <summary>
         /// Converts the Buffer to grayscale.
         /// </summary>
+        [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1115:ParameterMustFollowComma", 
+            Justification = "Unnecessary newlines reduce readability due to high nesting of scopes.")]
+        [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1116:SplitParametersMustStartOnLineAfterDeclaration", 
+            Justification = "Unnecessary newlines reduce readability due to high nesting of scopes.")]
         public unsafe void ToGrayscale()
         {
             // TODO: Resolve whether checking the bpp has any impact - it looks like the Bitmap class
@@ -150,7 +154,7 @@ namespace ImageBird
                     throw new NotImplementedException(Resources.UnsupportedImageColorDepth);
             }
 
-            this.Operation((data, scan0) =>
+            FastBitmap.Operation(this.Buffer, (data, scan0) =>
             {
                 for (int yPos = 0; yPos < data.Height; yPos++)
                 {
@@ -165,21 +169,52 @@ namespace ImageBird
         }
 
         /// <summary>
+        /// Performs the supplied operation on the supplied bitmap.
+        /// </summary>
+        /// <param name="bitmap">
+        /// The bitmap to perform the operation on.
+        /// </param>
+        /// <param name="operation">
+        /// The operation to perform on the contents of the supplied Bitmap.
+        /// </param>
+        protected static unsafe void Operation(Bitmap bitmap, LockingDataOperation operation)
+        {
+            BitmapData contents = bitmap.LockBits(
+                new Rectangle(0, 0, bitmap.Width, bitmap.Height),
+                ImageLockMode.ReadOnly,
+                bitmap.PixelFormat);
+
+            try
+            {
+                operation(contents, (byte*)contents.Scan0.ToPointer());
+            }
+            finally
+            {
+                bitmap.UnlockBits(contents);
+            }
+        }
+
+        /// <summary>
         /// Applies the supplied kernel to the buffer.
         /// </summary>
         /// <param name="kernel">
         /// The kernel to apply. Assumed to be square and of odd dimensions.
         /// </param>
-        [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1115:ParameterMustFollowComma", Justification = "Unecessary indentation reduces readability due to the high nesting of loops.")]
-        [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1116:SplitParametersMustStartOnLineAfterDeclaration", Justification = "Unecessary indentation reduces readability due to the high nesting of loops.")]
-        [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1117:ParametersMustBeOnSameLineOrSeparateLines", Justification = "Unecessary indentation reduces readability due to the high nesting of loops.")]
+        [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1115:ParameterMustFollowComma",
+             Justification = "Unecessary newlines reduce readability due to the high nesting of scopes.")]
+        [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1116:SplitParametersMustStartOnLineAfterDeclaration",
+             Justification = "Unecessary newlines reduce readability due to the high nesting of scopes.")]
+        [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1117:ParametersMustBeOnSameLineOrSeparateLines",
+             Justification = "Unecessary newlines reduce readability due to the high nesting of scopes.")]
+        [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1409:RemoveUnnecessaryCode",
+            Justification = "Empty lock is intentional to ensure all threads exit before attempting disposal.")]
         protected unsafe void KernelOperation(Kernel kernel)
         {
             Rectangle cropRect = new Rectangle(
                 kernel.Center,
                 kernel.Center,
-                this.Buffer.Width - kernel.Center,
-                this.Buffer.Height - kernel.Center);
+                this.Buffer.Width - (kernel.Center * 2),
+                this.Buffer.Height - (kernel.Center * 2));
 
             Bitmap subBuffer = new Bitmap(cropRect.Width, cropRect.Height);
 
@@ -192,25 +227,22 @@ namespace ImageBird
                     GraphicsUnit.Pixel);
             }
 
-            this.Operation((data, scan0) =>
+            FastBitmap.Operation(subBuffer, (subData, subScan0) =>
             {
-                BitmapData subContents = subBuffer.LockBits(
-                    new Rectangle(0, 0, subBuffer.Width, subBuffer.Height),
-                    ImageLockMode.ReadOnly,
-                    subBuffer.PixelFormat);
-
-                byte* subScan0 = (byte*)subContents.Scan0.ToPointer();
-
-                try
+                // ReSharper disable AccessToDisposedClosure
+                FastBitmap.Operation(this.Buffer, (data, scan0) =>
+                // ReSharper restore AccessToDisposedClosure
                 {
-                    Parallel.For(kernel.Center, data.Height - kernel.Center, yPos =>
+                    int localWidth = subBuffer.Width;
+
+                    Parallel.For(0, subBuffer.Height, yPos =>
                     {
-                        Parallel.For(kernel.Center, data.Width - kernel.Center, xPos =>
+                        Parallel.For(0, localWidth, xPos =>
                         {
-                            byte* current = 
-                                subScan0 + 
-                                ((yPos - kernel.Center) * data.Stride) + 
-                                (((xPos - kernel.Center) * this.bitsPerPixel) / 8);
+                            byte* current =
+                                subScan0 +
+                                (yPos * subData.Stride) +
+                                ((xPos * this.bitsPerPixel) / 8);
 
                             double newR = 0D;
                             double newG = 0D;
@@ -224,55 +256,25 @@ namespace ImageBird
 
                                     byte* local =
                                         scan0 +
-                                        ((yPos + localY) * data.Stride) +
-                                        (((xPos + localX) * this.bitsPerPixel) / 8);
+                                        ((yPos + kernel.Center + localY) * data.Stride) +
+                                        (((xPos + kernel.Center + localX) * this.bitsPerPixel) / 8);
 
-                                    newR += ((double)(*scan0)) * scaling;
-                                    newG += ((double)(*(scan0 + 1))) * scaling;
-                                    newB += ((double)(*(scan0 + 2))) * scaling;
+                                    newR += ((double)(*local)) * scaling;
+                                    newG += ((double)(*(local + 1))) * scaling;
+                                    newB += ((double)(*(local + 2))) * scaling;
                                 }
                             }
 
-                            *current = (byte)newR;
-                            *(current + 1) = (byte)newG;
-                            *(current + 2) = (byte)newB;
+                            *current = (byte)(int)newR;
+                            *(current + 1) = (byte)(int)newG;
+                            *(current + 2) = (byte)(int)newB;
                         });
                     });
-                }
-                finally
-                {
-                    subBuffer.UnlockBits(subContents);
-                }
+                });
             });
 
-            Bitmap disposer = this.Buffer;
+            this.Buffer.Dispose();
             this.Buffer = subBuffer;
-            disposer.Dispose();
-        }
-
-        /// <summary>
-        /// Performs the supplied operation on the Buffer.
-        /// </summary>
-        /// <param name="operation">
-        /// The operation to perform on each pixel.
-        /// </param>
-        protected unsafe void Operation(LockingDataOperation operation)
-        {
-            BitmapData contents = this.Buffer.LockBits(
-                new Rectangle(0, 0, this.Buffer.Width, this.Buffer.Height),
-                ImageLockMode.ReadOnly,
-                this.Buffer.PixelFormat);
-
-            byte* scan0 = (byte*)contents.Scan0.ToPointer();
-
-            try
-            {
-                operation(contents, scan0);
-            }
-            finally
-            {
-                this.Buffer.UnlockBits(contents);
-            }
         }
     }
 }

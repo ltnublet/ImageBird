@@ -6,10 +6,12 @@ using System.Threading.Tasks;
 
 namespace ImageBird
 {
+    using global::System.Diagnostics.CodeAnalysis;
+
     /// <summary>
     /// Represents a square 2-dimensional kernel used for kernel convolution.
     /// </summary>
-    public class Kernel
+    public class Kernel : ICloneable
     {
         /// <summary>
         /// Instantiates a new Kernel with the specified contents.
@@ -88,6 +90,38 @@ namespace ImageBird
             }
 
             return new Kernel(kernel);
+        }
+
+        /// <summary>
+        /// Creates a shallow copy of the Kernel.
+        /// </summary>
+        public object Clone()
+        {
+            return new Kernel((double[,])this.Contents.Clone());
+        }
+
+        /// <summary>
+        /// Returns a string that represents the Kernel.
+        /// </summary>
+        [SuppressMessage("ReSharper", "UseStringInterpolation", 
+            Justification = "String interpolation reduces readability due to the complexity of the Join.")]
+        public override string ToString()
+        {
+            IEnumerable<double> asEnumerable = this.Contents.Cast<double>();
+            return string.Format(
+                "{0}:{1}\n{2}", 
+                this.Dimension, 
+                this.Center, 
+                string.Join(
+                    ",\n", 
+                    Enumerable.Range(0, this.Dimension)
+                        .Select(x => 
+                            string.Join(
+                                ", ", 
+                                asEnumerable
+                                    .Skip(this.Dimension * x)
+                                    .Take(this.Dimension)
+                                    .Select(y => y.ToString())))));
         }
     }
 }
