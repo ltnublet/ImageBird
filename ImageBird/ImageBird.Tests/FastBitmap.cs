@@ -58,6 +58,21 @@ namespace ImageBird.Tests
             SUT.FastBitmap.FromFile(FastBitmap.TestData1_KnownGood).Blur(1f, 0));
         }
 
+        [Fact]
+        public void DivideBy_ValidFactor_ShouldSucceed()
+        {
+            SUT.FastBitmap expected = SUT.FastBitmap.FromFile(FastBitmap.TestData1_KnownGood);
+            SUT.FastBitmap actual = SUT.FastBitmap.FromFile(FastBitmap.TestData1_KnownGood);
+            actual.DivideBy(128);
+
+            actual.Buffer.Save("whatuplol.png");
+
+            Point? mismatch;
+            bool result = TestUtil.ContentsEqual(expected.Buffer, actual.Buffer, out mismatch) && !mismatch.HasValue;
+
+            Assert.True(result, result ? string.Empty : mismatch.Value.ToString());
+        }
+
         [Theory]
         [InlineData(1D, 5, FastBitmap.TestData1_KnownGood, FastBitmap.TestData1_BlurSigma1Weight5_KnownGood)]
         [InlineData(1D, 25, FastBitmap.TestData1_KnownGood, FastBitmap.TestData1_BlurSigma1Weight25_KnownGood)]

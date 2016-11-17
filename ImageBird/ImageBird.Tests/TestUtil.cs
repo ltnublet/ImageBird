@@ -36,6 +36,30 @@ namespace ImageBird.Tests
         /// </exception>
         public static bool ContentsEqual(Bitmap left, Bitmap right)
         {
+            Point? outBuffer;
+            return TestUtil.ContentsEqual(left, right, out outBuffer);
+        }
+
+        /// <summary>
+        /// Compares two Bitmap objects and checks if their contents are equal, outputting the indices at which the
+        /// mismatch occurred (or null if indices do not apply to the situation).
+        /// </summary>
+        /// <param name="left">
+        /// The first Bitmap.
+        /// </param>
+        /// <param name="right">
+        /// The second Bitmap.
+        /// </param>
+        /// <param name="mismatch">
+        /// The indices at which the mismatch was detected (or null if indices do not apply to the situation).
+        /// </param>
+        /// <returns>
+        /// True if the contents are equal, and false otherwise.
+        /// </returns>
+        public static bool ContentsEqual(Bitmap left, Bitmap right, out Point? mismatch)
+        {
+            mismatch = null;
+
             if (left == null)
             {
                 throw new ArgumentNullException(nameof(left));
@@ -70,8 +94,12 @@ namespace ImageBird.Tests
             {
                 for (int xPos = 0; xPos < left.Width; xPos++)
                 {
-                    if (left.GetPixel(xPos, yPos) != right.GetPixel(xPos, yPos))
+                    Color leftPixel = left.GetPixel(xPos, yPos);
+                    Color rightPixel = right.GetPixel(xPos, yPos);
+
+                    if (!leftPixel.Equals(rightPixel))
                     {
+                        mismatch = new Point(xPos, yPos);
                         return false;
                     }
                 }

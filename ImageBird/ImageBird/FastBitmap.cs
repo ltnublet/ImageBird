@@ -122,6 +122,39 @@ namespace ImageBird
         }
 
         /// <summary>
+        /// Iterates over the Buffer, dividing the magnitude of each pixel by the supplied factor.
+        /// </summary>
+        /// <param name="factor">
+        /// The factor by which to divide the magnitude of each pixel.
+        /// </param>
+        [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1115:ParameterMustFollowComma",
+             Justification = "Unecessary newlines reduce readability due to the high nesting of scopes.")]
+        [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1116:SplitParametersMustStartOnLineAfterDeclaration",
+             Justification = "Unecessary newlines reduce readability due to the high nesting of scopes.")]
+        [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1117:ParametersMustBeOnSameLineOrSeparateLines",
+             Justification = "Unecessary newlines reduce readability due to the high nesting of scopes.")]
+        public unsafe void DivideBy(ushort factor)
+        {
+            int bufferHeight = this.Buffer.Height;
+            int bufferWidth = this.Buffer.Width;
+
+            FastBitmap.Operation(this.Buffer, (data, scan0) =>
+            {
+                Parallel.For(0, bufferHeight, yPos =>
+                {
+                    int localWidth = bufferWidth;
+
+                    Parallel.For(0, localWidth, xPos =>
+                    {
+                        *scan0 = (byte)(*scan0 / (byte)factor);
+                        *(scan0 + 1) = (byte)(*(scan0 + 1) / (byte)factor);
+                        *(scan0 + 2) = (byte)(*(scan0 + 2) / (byte)factor);
+                    });
+                });
+            });
+        }
+
+        /// <summary>
         /// Converts the Buffer to grayscale.
         /// </summary>
         [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1115:ParameterMustFollowComma", 
