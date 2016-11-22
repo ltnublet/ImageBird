@@ -27,6 +27,7 @@ namespace ImageBird.Tests
         private const string TestData1_BlurSigma1478Weight5_KnownGood = ResourcePath + "TestData1_BlurSigma1.478Weight5_KnownGood.png";
         private const string TestData1_DivideBy32_KnownGood = ResourcePath + "TestData1_DivideBy32_KnownGood.png";
         private const string TestData1_DivideBy128_KnownGood = ResourcePath + "TestData1_DivideBy128_KnownGood.png";
+        private const string TestData1_Pow2_KnownGood = ResourcePath + "TestData1_Pow2_KnownGood.png";
         private const string TestData2_KnownGood = ResourcePath + "TestData2_KnownGood.png";
         private const string TestData2_GrayScale_KnownGood = ResourcePath + "TestData2_GrayScale_KnownGood.png";
         private const string TestData3_KnownGood = ResourcePath + "TestData3_KnownGood.gif";
@@ -138,6 +139,18 @@ namespace ImageBird.Tests
             using (SUT.FastBitmap actual = SUT.FastBitmap.FromFile(FastBitmap.TestData4_KnownGood))
             {
                 Assert.Equal(146, actual.Max());
+            }
+        }
+
+        [Fact]
+        public void Pow_ValidBitmap_ShouldSucceed()
+        {
+            using (Bitmap expected = new Bitmap(Image.FromFile(TestData1_Pow2_KnownGood)))
+            using (SUT.FastBitmap actual = SUT.FastBitmap.FromFile(FastBitmap.TestData1_KnownGood))
+            {
+                actual.Pow(2);
+
+                FastBitmap.AssertContentsEqual(expected, actual.Buffer);
             }
         }
 

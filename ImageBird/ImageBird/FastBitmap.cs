@@ -100,7 +100,7 @@ namespace ImageBird
         }
 
         /// <summary>
-        /// Performs a gaussian blur on the buffer using the specified sigma and weight.
+        /// Performs a gaussian blur on the Buffer using the specified sigma and weight.
         /// </summary>
         /// <param name="sigma">
         /// The factor by which to blur. Larger sigmas produce greater blurring.
@@ -174,8 +174,53 @@ namespace ImageBird
         }
 
         /// <summary>
+        /// Raises the value of each pixel in the Buffer's channels to the supplied power. Channel values are capped at
+        /// 255.
+        /// </summary>
+        /// <param name="power">
+        /// The power to raise each pixel's channel to.
+        /// </param>
+        [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1115:ParameterMustFollowComma",
+             Justification = "Unecessary newlines reduce readability due to the high nesting of scopes.")]
+        [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1116:SplitParametersMustStartOnLineAfterDeclaration",
+             Justification = "Unecessary newlines reduce readability due to the high nesting of scopes.")]
+        [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1117:ParametersMustBeOnSameLineOrSeparateLines",
+             Justification = "Unecessary newlines reduce readability due to the high nesting of scopes.")]
+        public unsafe void Pow(ushort power)
+        {
+            int bufferHeight = this.Buffer.Height;
+            int bufferWidth = this.Buffer.Width;
+
+            FastBitmap.Operation(this.Buffer, (data, scan0) =>
+            {
+                Parallel.For(0, bufferHeight, yPos =>
+                {
+                    int localWidth = bufferWidth;
+
+                    Parallel.For(0, localWidth, xPos =>
+                    {
+                        byte* valR =
+                            scan0 +
+                            (yPos * data.Stride) +
+                            ((xPos * this.bitsPerPixel) / 8);
+                        byte* valG = valR + 1;
+                        byte* valB = valR + 2;
+
+                        int newR = (int)Math.Pow(*valR, power);
+                        int newG = (int)Math.Pow(*valG, power);
+                        int newB = (int)Math.Pow(*valB, power);
+
+                        *valR = (byte)(newR > 255 ? 255 : newR);
+                        *valG = (byte)(newG > 255 ? 255 : newG);
+                        *valB = (byte)(newB > 255 ? 255 : newB);
+                    });
+                });
+            });
+        }
+
+        /// <summary>
         /// Iterates over the Buffer, scaling the magnitude of each pixel by the supplied factor. For example, 255 is
-        /// no scaling, 128 doubles all channels, 64 quadruples all channels, etc.
+        /// no scaling, 128 doubles all channels, 64 quadruples all channels, etc. Channel values are capped to 255.
         /// </summary>
         /// <param name="factor">
         /// The factor by which to scale the magnitude of each pixel.
@@ -211,8 +256,8 @@ namespace ImageBird
                             scan0 +
                             (yPos * data.Stride) +
                             ((xPos * this.bitsPerPixel) / 8);
-                        byte* valG = (valR + 1);
-                        byte* valB = (valR + 2);
+                        byte* valG = valR + 1;
+                        byte* valB = valR + 2;
 
                         int newR = (int)((double)*valR * actualFactor);
                         int newG = (int)((double)*valG * actualFactor);
