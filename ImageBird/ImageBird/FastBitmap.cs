@@ -123,6 +123,57 @@ namespace ImageBird
         }
 
         /// <summary>
+        /// Returns the largest magnitude in the Buffer.
+        /// </summary>
+        /// <returns>
+        /// The largest magnitude in the Buffer.
+        /// </returns>
+        [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1115:ParameterMustFollowComma",
+             Justification = "Unecessary newlines reduce readability due to the high nesting of scopes.")]
+        [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1116:SplitParametersMustStartOnLineAfterDeclaration",
+             Justification = "Unecessary newlines reduce readability due to the high nesting of scopes.")]
+        [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1117:ParametersMustBeOnSameLineOrSeparateLines",
+             Justification = "Unecessary newlines reduce readability due to the high nesting of scopes.")]
+        public unsafe ushort Max()
+        {
+            object theLock = new object();
+            ushort returnValue = 0;
+
+            using (FastBitmap asGrayscale = new FastBitmap((Bitmap)this.Buffer.Clone()))
+            {
+                asGrayscale.ToGrayscale();
+                
+                FastBitmap.Operation(asGrayscale.Buffer, (data, scan0) =>
+                {
+                    Parallel.For(0, data.Height, yPos =>
+                    {
+                        byte localMax = 0;
+
+                        for (int xPos = 0; xPos < data.Width; xPos++)
+                        {
+                            byte current = *(scan0 + (yPos * data.Stride) + ((xPos * this.bitsPerPixel) / 8));
+
+                            if (current > localMax)
+                            {
+                                localMax = current;
+                            }
+                        }
+
+                        lock (theLock)
+                        {
+                            if (localMax > returnValue)
+                            {
+                                returnValue = localMax;
+                            }
+                        }
+                    });
+                });
+            }
+
+            return returnValue;
+        }
+
+        /// <summary>
         /// Iterates over the Buffer, scaling the magnitude of each pixel by the supplied factor. For example, 255 is
         /// no scaling, 128 doubles all channels, 64 quadruples all channels, etc.
         /// </summary>

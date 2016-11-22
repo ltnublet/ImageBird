@@ -94,6 +94,7 @@
     <Content Include="Resources\TestData2_KnownGood.png" />
     <Content Include="Resources\TestData3_Grayscale_KnownGood.gif" />
     <Content Include="Resources\TestData3_KnownGood.gif" />
+    <Content Include="Resources\TestData4_KnownGood.png" />
     <Content Include="Resources\TestData_txt.txt" />
   </ItemGroup>
   <Choose>

@@ -31,6 +31,7 @@ namespace ImageBird.Tests
         private const string TestData2_GrayScale_KnownGood = ResourcePath + "TestData2_GrayScale_KnownGood.png";
         private const string TestData3_KnownGood = ResourcePath + "TestData3_KnownGood.gif";
         private const string TestData3_GrayScale_KnownGood = ResourcePath + "TestData3_GrayScale_KnownGood.gif";
+        private const string TestData4_KnownGood = ResourcePath + "TestData4_KnownGood.png";
 
         private const string TestData_txt = ResourcePath + "TestData_txt.txt";
 
@@ -128,6 +129,15 @@ namespace ImageBird.Tests
                 actual.ToGrayscale();
 
                 FastBitmap.AssertContentsEqual(expected, actual.Buffer);
+            }
+        }
+
+        [Fact]
+        public void Max_ValidBitmap_ShouldSucceed()
+        {
+            using (SUT.FastBitmap actual = SUT.FastBitmap.FromFile(FastBitmap.TestData4_KnownGood))
+            {
+                Assert.Equal(146, actual.Max());
             }
         }
 
