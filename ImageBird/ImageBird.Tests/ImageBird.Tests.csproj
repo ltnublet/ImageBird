@@ -86,6 +86,8 @@
     <Content Include="Resources\TestData1_BlurSigma1.478Weight5_KnownGood.png" />
     <Content Include="Resources\TestData1_BlurSigma1Weight25_KnownGood.png" />
     <Content Include="Resources\TestData1_BlurSigma1Weight5_KnownGood.png" />
+    <Content Include="Resources\TestData1_DivideBy128_KnownGood.png" />
+    <Content Include="Resources\TestData1_DivideBy32_KnownGood.png" />
     <Content Include="Resources\TestData1_Grayscale_KnownGood.png" />
     <Content Include="Resources\TestData1_KnownGood.png" />
     <Content Include="Resources\TestData2_Grayscale_KnownGood.png" />

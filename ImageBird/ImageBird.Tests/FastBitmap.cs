@@ -25,6 +25,8 @@ namespace ImageBird.Tests
         private const string TestData1_BlurSigma1Weight5_KnownGood = ResourcePath + "TestData1_BlurSigma1Weight5_KnownGood.png";
         private const string TestData1_BlurSigma1Weight25_KnownGood = ResourcePath + "TestData1_BlurSigma1Weight25_KnownGood.png";
         private const string TestData1_BlurSigma1478Weight5_KnownGood = ResourcePath + "TestData1_BlurSigma1.478Weight5_KnownGood.png";
+        private const string TestData1_DivideBy32_KnownGood = ResourcePath + "TestData1_DivideBy32_KnownGood.png";
+        private const string TestData1_DivideBy128_KnownGood = ResourcePath + "TestData1_DivideBy128_KnownGood.png";
         private const string TestData2_KnownGood = ResourcePath + "TestData2_KnownGood.png";
         private const string TestData2_GrayScale_KnownGood = ResourcePath + "TestData2_GrayScale_KnownGood.png";
         private const string TestData3_KnownGood = ResourcePath + "TestData3_KnownGood.gif";
@@ -47,30 +49,31 @@ namespace ImageBird.Tests
         [Fact]
         public void FastBitmap_ValidBitmap_ShouldSucceed()
         {
-            SUT.FastBitmap expected = new SUT.FastBitmap(new Bitmap(Image.FromFile(FastBitmap.TestData1_KnownGood)));
-            expected.Dispose();
+            using (SUT.FastBitmap expected = 
+                new SUT.FastBitmap(new Bitmap(Image.FromFile(FastBitmap.TestData1_KnownGood))))
+            {
+            }
         }
 
         [Fact]
         public void Blur_InvalidWeight_ThrowsArgument()
         {
             Assert.Throws<ArgumentException>(() => 
-            SUT.FastBitmap.FromFile(FastBitmap.TestData1_KnownGood).Blur(1f, 0));
+                SUT.FastBitmap.FromFile(FastBitmap.TestData1_KnownGood).Blur(1f, 0));
         }
 
-        [Fact]
-        public void DivideBy_ValidFactor_ShouldSucceed()
+        [Theory]
+        [InlineData(32, FastBitmap.TestData1_KnownGood, FastBitmap.TestData1_DivideBy32_KnownGood)]
+        [InlineData(128, FastBitmap.TestData1_KnownGood, FastBitmap.TestData1_DivideBy128_KnownGood)]
+        public void ScaleBy_ValidFactor_ShouldSucceed(ushort factor, string input, string expectedOutput)
         {
-            SUT.FastBitmap expected = SUT.FastBitmap.FromFile(FastBitmap.TestData1_KnownGood);
-            SUT.FastBitmap actual = SUT.FastBitmap.FromFile(FastBitmap.TestData1_KnownGood);
-            actual.DivideBy(128);
+            using (Bitmap expected = (Bitmap)Image.FromFile(expectedOutput))
+            using (SUT.FastBitmap actual = SUT.FastBitmap.FromFile(input))
+            {
+                actual.ScaleBy(factor);
 
-            actual.Buffer.Save("whatuplol.png");
-
-            Point? mismatch;
-            bool result = TestUtil.ContentsEqual(expected.Buffer, actual.Buffer, out mismatch) && !mismatch.HasValue;
-
-            Assert.True(result, result ? string.Empty : mismatch.Value.ToString());
+                FastBitmap.AssertContentsEqual(expected, actual.Buffer);
+            }
         }
 
         [Theory]
@@ -79,12 +82,13 @@ namespace ImageBird.Tests
         [InlineData(1.478D, 5, FastBitmap.TestData1_KnownGood, FastBitmap.TestData1_BlurSigma1478Weight5_KnownGood)]
         public void Blur_ValidParams_ShouldSucceed(double sigma, int weight, string input, string expectedOutput)
         {
-            Bitmap expected = (Bitmap)Image.FromFile(expectedOutput);
+            using (Bitmap expected = (Bitmap)Image.FromFile(expectedOutput))
+            using (SUT.FastBitmap actual = SUT.FastBitmap.FromFile(input))
+            {
+                actual.Blur(sigma, weight);
 
-            SUT.FastBitmap actual = SUT.FastBitmap.FromFile(input);
-            actual.Blur(sigma, weight);
-
-            Assert.True(TestUtil.ContentsEqual(expected, actual.Buffer));
+                FastBitmap.AssertContentsEqual(expected, actual.Buffer);
+            }
         }
 
         [Fact]
@@ -107,41 +111,32 @@ namespace ImageBird.Tests
         [Fact]
         public void FromFile_ValidBitmap_ShouldSucceed()
         {
-            SUT.FastBitmap expected = SUT.FastBitmap.FromFile(FastBitmap.TestData1_KnownGood);
-            expected.Dispose();
+            using (SUT.FastBitmap expected = SUT.FastBitmap.FromFile(FastBitmap.TestData1_KnownGood))
+            {
+            }
         }
 
-        [Fact]
-        public void Grayscale_32BitColorDepth_ShouldSucceed()
+        [Theory]
+        [InlineData(FastBitmap.TestData1_GrayScale_KnownGood, FastBitmap.TestData1_KnownGood)]
+        [InlineData(FastBitmap.TestData2_GrayScale_KnownGood, FastBitmap.TestData2_KnownGood)]
+        [InlineData(FastBitmap.TestData3_GrayScale_KnownGood, FastBitmap.TestData3_KnownGood)]
+        public void Grayscale_VaryingBitColorDepths_ShouldSucceed(string expectedFile, string actualFile)
         {
-            Bitmap expected = new Bitmap(Image.FromFile(FastBitmap.TestData1_GrayScale_KnownGood));
+            using (Bitmap expected = new Bitmap(Image.FromFile(expectedFile)))
+            using (SUT.FastBitmap actual = SUT.FastBitmap.FromFile(actualFile))
+            {
+                actual.ToGrayscale();
 
-            SUT.FastBitmap actual = SUT.FastBitmap.FromFile(FastBitmap.TestData1_KnownGood);
-            actual.ToGrayscale();
-
-            Assert.True(TestUtil.ContentsEqual(expected, actual.Buffer));
+                FastBitmap.AssertContentsEqual(expected, actual.Buffer);
+            }
         }
 
-        [Fact]
-        public void Grayscale_24BitColorDepth_ShouldSucceed()
+        private static void AssertContentsEqual(Bitmap expected, Bitmap actual)
         {
-            Bitmap expected = new Bitmap(Image.FromFile(FastBitmap.TestData2_GrayScale_KnownGood));
+            Point? mismatch;
+            bool result = TestUtil.ContentsEqual(expected, actual, out mismatch) && !mismatch.HasValue;
 
-            SUT.FastBitmap actual = SUT.FastBitmap.FromFile(FastBitmap.TestData2_KnownGood);
-            actual.ToGrayscale();
-
-            Assert.True(TestUtil.ContentsEqual(expected, actual.Buffer));
-        }
-
-        [Fact]
-        public void Grayscale_8BitColorDepth_ShouldSucceed()
-        {
-            Bitmap expected = new Bitmap(Image.FromFile(FastBitmap.TestData3_GrayScale_KnownGood));
-
-            SUT.FastBitmap actual = SUT.FastBitmap.FromFile(FastBitmap.TestData3_KnownGood);
-            actual.ToGrayscale();
-
-            Assert.True(TestUtil.ContentsEqual(expected, actual.Buffer));
+            Assert.True(result, result ? string.Empty : $"Mismatch detected at {mismatch.Value.ToString()}");
         }
     }
 }

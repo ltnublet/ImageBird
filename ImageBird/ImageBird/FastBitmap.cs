@@ -56,7 +56,7 @@ namespace ImageBird
         /// The base address.
         /// </param>
         protected unsafe delegate void LockingDataOperation(BitmapData data, byte* scan0);
-        
+
         private unsafe delegate void ToGrayscaleOperation(byte* scan0);
 
         /// <summary>
@@ -118,26 +118,36 @@ namespace ImageBird
         /// </summary>
         public void Dispose()
         {
+            this.Original.Dispose();
             this.Buffer.Dispose();
         }
 
         /// <summary>
-        /// Iterates over the Buffer, dividing the magnitude of each pixel by the supplied factor.
+        /// Iterates over the Buffer, scaling the magnitude of each pixel by the supplied factor. For example, 255 is
+        /// no scaling, 128 doubles all channels, 64 quadruples all channels, etc.
         /// </summary>
         /// <param name="factor">
-        /// The factor by which to divide the magnitude of each pixel.
+        /// The factor by which to scale the magnitude of each pixel.
         /// </param>
+        [SuppressMessage("StyleCop.CSharp.SpacingRules", "SA1003:SymbolsMustBeSpacedCorrectly",
+            Justification = "Spacing is valid - the asterisk isn't multiplying, but rather dereferencing.")]
+        [SuppressMessage("StyleCop.CSharp.SpacingRules", "SA1009:ClosingParenthesisMustBeSpacedCorrectly",
+            Justification = "Spacing is valid - parenthesis due to dereferencing and casting.")]
         [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1115:ParameterMustFollowComma",
              Justification = "Unecessary newlines reduce readability due to the high nesting of scopes.")]
         [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1116:SplitParametersMustStartOnLineAfterDeclaration",
              Justification = "Unecessary newlines reduce readability due to the high nesting of scopes.")]
         [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1117:ParametersMustBeOnSameLineOrSeparateLines",
              Justification = "Unecessary newlines reduce readability due to the high nesting of scopes.")]
-        public unsafe void DivideBy(ushort factor)
+        [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1119:StatementMustNotUseUnnecessaryParenthesis", 
+            Justification = "Parenthesis are necessary due to casting of incremented pointer.")]
+        public unsafe void ScaleBy(ushort factor)
         {
+            double actualFactor = (255D / (double)factor);
+
             int bufferHeight = this.Buffer.Height;
             int bufferWidth = this.Buffer.Width;
-
+            
             FastBitmap.Operation(this.Buffer, (data, scan0) =>
             {
                 Parallel.For(0, bufferHeight, yPos =>
@@ -146,9 +156,20 @@ namespace ImageBird
 
                     Parallel.For(0, localWidth, xPos =>
                     {
-                        *scan0 = (byte)(*scan0 / (byte)factor);
-                        *(scan0 + 1) = (byte)(*(scan0 + 1) / (byte)factor);
-                        *(scan0 + 2) = (byte)(*(scan0 + 2) / (byte)factor);
+                        byte* valR =
+                            scan0 +
+                            (yPos * data.Stride) +
+                            ((xPos * this.bitsPerPixel) / 8);
+                        byte* valG = (valR + 1);
+                        byte* valB = (valR + 2);
+
+                        int newR = (int)((double)*valR * actualFactor);
+                        int newG = (int)((double)*valG * actualFactor);
+                        int newB = (int)((double)*valB * actualFactor);
+
+                        *valR = (byte)(newR > 255 ? 255 : newR);
+                        *valG = (byte)(newG > 255 ? 255 : newG);
+                        *valB = (byte)(newB > 255 ? 255 : newB);
                     });
                 });
             });
@@ -157,6 +178,7 @@ namespace ImageBird
         /// <summary>
         /// Converts the Buffer to grayscale.
         /// </summary>
+        [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1117:ParametersMustBeOnSameLineOrSeparateLines", Justification = "Reviewed. Suppression is OK here.")]
         [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1115:ParameterMustFollowComma", 
             Justification = "Unnecessary newlines reduce readability due to high nesting of scopes.")]
         [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1116:SplitParametersMustStartOnLineAfterDeclaration", 
@@ -187,17 +209,22 @@ namespace ImageBird
                     throw new NotImplementedException(Resources.UnsupportedImageColorDepth);
             }
 
+            int bufferHeight = this.Buffer.Height;
+            int bufferWidth = this.Buffer.Width;
+
             FastBitmap.Operation(this.Buffer, (data, scan0) =>
             {
-                for (int yPos = 0; yPos < data.Height; yPos++)
+                Parallel.For(0, bufferHeight, yPos =>
                 {
-                    for (int xPos = 0; xPos < data.Width; xPos++)
+                    int localWidth = bufferWidth;
+
+                    Parallel.For(0, localWidth, xPos =>
                     {
                         byte* pixel = scan0 + (yPos * data.Stride) + ((xPos * this.bitsPerPixel) / 8);
 
                         grayscale(pixel);
-                    }
-                }
+                    });
+                });
             });
         }
 
