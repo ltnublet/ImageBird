@@ -40,10 +40,25 @@ namespace ImageBird
             {
                 throw new ArgumentException(Properties.Resources.SuppliedBitmapHasInvalidDimensions, nameof(bitmap));
             }
+            
+            this.Content = (Bitmap)bitmap.Clone();
+            this.bitsPerPixel = Image.GetPixelFormatSize(this.Content.PixelFormat);
+        }
 
-            this.Buffer = (Bitmap)bitmap.Clone();
-            this.Original = (Bitmap)bitmap.Clone();
-            this.bitsPerPixel = Image.GetPixelFormatSize(this.Buffer.PixelFormat);
+        /// <summary>
+        /// Initializes a new instance of the <see cref="FastBitmap"/> class. Does not check supplied parameters
+        /// for validity.
+        /// </summary>
+        /// <param name="bitmap">
+        /// The bitmap to convert to a FastBitmap.
+        /// </param>
+        /// <param name="bitsPerPixel">
+        /// The bits per pixel of the supplied bitmap.
+        /// </param>
+        protected unsafe FastBitmap(Bitmap bitmap, int bitsPerPixel)
+        {
+            this.Content = (Bitmap)bitmap.Clone();
+            this.bitsPerPixel = bitsPerPixel;
         }
 
         /// <summary>
@@ -60,14 +75,9 @@ namespace ImageBird
         private unsafe delegate void ToGrayscaleOperation(byte* scan0);
 
         /// <summary>
-        /// Bitmap to which specified changes will be applied.
+        /// The contents of the current FastBitmap.
         /// </summary>
-        public Bitmap Buffer { get; protected set; }
-
-        /// <summary>
-        /// A clone of the original bitmap supplied at instantiation.
-        /// </summary>
-        public Bitmap Original { get; protected set; }
+        public Bitmap Content { get; protected set; }
 
         /// <summary>
         /// Creates a FastBitmap from the specified file.
@@ -100,7 +110,7 @@ namespace ImageBird
         }
 
         /// <summary>
-        /// Performs a gaussian blur on the Buffer using the specified sigma and weight.
+        /// Performs a gaussian blur on the image using the specified sigma and weight.
         /// </summary>
         /// <param name="sigma">
         /// The factor by which to blur. Larger sigmas produce greater blurring.
@@ -108,9 +118,9 @@ namespace ImageBird
         /// <param name="weight">
         /// The size of the kernel. Larger weights produce greater blurring.
         /// </param>
-        public void Blur(double sigma, int weight)
+        public FastBitmap Blur(double sigma, int weight)
         {
-            this.KernelOperation(Kernel.Gaussian(sigma, weight));
+            return this.KernelOperation(Kernel.Gaussian(sigma, weight));
         }
 
         /// <summary>
@@ -118,15 +128,14 @@ namespace ImageBird
         /// </summary>
         public void Dispose()
         {
-            this.Original.Dispose();
-            this.Buffer.Dispose();
+            this.Content.Dispose();
         }
 
         /// <summary>
-        /// Returns the largest magnitude in the Buffer.
+        /// Returns the largest magnitude in the FastBitmap.
         /// </summary>
         /// <returns>
-        /// The largest magnitude in the Buffer.
+        /// The largest magnitude in the FastBitmap.
         /// </returns>
         [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1115:ParameterMustFollowComma",
              Justification = "Unecessary newlines reduce readability due to the high nesting of scopes.")]
@@ -139,11 +148,9 @@ namespace ImageBird
             object theLock = new object();
             ushort returnValue = 0;
 
-            using (FastBitmap asGrayscale = new FastBitmap((Bitmap)this.Buffer.Clone()))
+            using (FastBitmap asGrayscale = this.ToGrayscale())
             {
-                asGrayscale.ToGrayscale();
-                
-                FastBitmap.Operation(asGrayscale.Buffer, (data, scan0) =>
+                FastBitmap.Operation(asGrayscale.Content, (data, scan0) =>
                 {
                     Parallel.For(0, data.Height, yPos =>
                     {
@@ -174,8 +181,8 @@ namespace ImageBird
         }
 
         /// <summary>
-        /// Raises the value of each pixel in the Buffer's channels to the supplied power. Channel values are capped at
-        /// 255.
+        /// Raises the value of each pixel in the FastBitmap's channels to the supplied power. Channel values are
+        /// capped at 255.
         /// </summary>
         /// <param name="power">
         /// The power to raise each pixel's channel to.
@@ -186,12 +193,14 @@ namespace ImageBird
              Justification = "Unecessary newlines reduce readability due to the high nesting of scopes.")]
         [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1117:ParametersMustBeOnSameLineOrSeparateLines",
              Justification = "Unecessary newlines reduce readability due to the high nesting of scopes.")]
-        public unsafe void Pow(ushort power)
+        public unsafe FastBitmap Pow(ushort power)
         {
-            int bufferHeight = this.Buffer.Height;
-            int bufferWidth = this.Buffer.Width;
+            FastBitmap buffer = new FastBitmap(this.Content, this.bitsPerPixel);
 
-            FastBitmap.Operation(this.Buffer, (data, scan0) =>
+            int bufferHeight = buffer.Content.Height;
+            int bufferWidth = buffer.Content.Width;
+
+            FastBitmap.Operation(buffer.Content, (data, scan0) =>
             {
                 Parallel.For(0, bufferHeight, yPos =>
                 {
@@ -202,7 +211,7 @@ namespace ImageBird
                         byte* valR =
                             scan0 +
                             (yPos * data.Stride) +
-                            ((xPos * this.bitsPerPixel) / 8);
+                            ((xPos * buffer.bitsPerPixel) / 8);
                         byte* valG = valR + 1;
                         byte* valB = valR + 2;
 
@@ -216,11 +225,13 @@ namespace ImageBird
                     });
                 });
             });
+
+            return buffer;
         }
 
         /// <summary>
-        /// Iterates over the Buffer, scaling the magnitude of each pixel by the supplied factor. For example, 255 is
-        /// no scaling, 128 doubles all channels, 64 quadruples all channels, etc. Channel values are capped to 255.
+        /// Iterates over the FastBitmap, scaling the magnitude of each pixel by the supplied factor. For example, 255
+        /// is no scaling, 128 doubles all channels, 64 quadruples all channels, etc. Channel values are capped to 255.
         /// </summary>
         /// <param name="factor">
         /// The factor by which to scale the magnitude of each pixel.
@@ -237,14 +248,16 @@ namespace ImageBird
              Justification = "Unecessary newlines reduce readability due to the high nesting of scopes.")]
         [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1119:StatementMustNotUseUnnecessaryParenthesis", 
             Justification = "Parenthesis are necessary due to casting of incremented pointer.")]
-        public unsafe void ScaleBy(ushort factor)
+        public unsafe FastBitmap ScaleBy(ushort factor)
         {
+            FastBitmap buffer = new FastBitmap(this.Content, this.bitsPerPixel);
+
             double actualFactor = (255D / (double)factor);
 
-            int bufferHeight = this.Buffer.Height;
-            int bufferWidth = this.Buffer.Width;
+            int bufferHeight = buffer.Content.Height;
+            int bufferWidth = buffer.Content.Width;
             
-            FastBitmap.Operation(this.Buffer, (data, scan0) =>
+            FastBitmap.Operation(buffer.Content, (data, scan0) =>
             {
                 Parallel.For(0, bufferHeight, yPos =>
                 {
@@ -255,7 +268,7 @@ namespace ImageBird
                         byte* valR =
                             scan0 +
                             (yPos * data.Stride) +
-                            ((xPos * this.bitsPerPixel) / 8);
+                            ((xPos * buffer.bitsPerPixel) / 8);
                         byte* valG = valR + 1;
                         byte* valB = valR + 2;
 
@@ -269,23 +282,27 @@ namespace ImageBird
                     });
                 });
             });
+
+            return buffer;
         }
 
         /// <summary>
-        /// Converts the Buffer to grayscale.
+        /// Converts the FastBitmap to grayscale.
         /// </summary>
         [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1117:ParametersMustBeOnSameLineOrSeparateLines", Justification = "Reviewed. Suppression is OK here.")]
         [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1115:ParameterMustFollowComma", 
             Justification = "Unnecessary newlines reduce readability due to high nesting of scopes.")]
         [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1116:SplitParametersMustStartOnLineAfterDeclaration", 
             Justification = "Unnecessary newlines reduce readability due to high nesting of scopes.")]
-        public unsafe void ToGrayscale()
+        public unsafe FastBitmap ToGrayscale()
         {
+            FastBitmap buffer = new FastBitmap(this.Content, this.bitsPerPixel);
+
             // TODO: Resolve whether checking the bpp has any impact - it looks like the Bitmap class
             // will read in bitmaps of arbitrary color depth, but expose them as having 32bpp. Since
             // we don't save the outputs, the behaviour is equivalent.
             ToGrayscaleOperation grayscale = null;
-            switch (this.bitsPerPixel)
+            switch (buffer.bitsPerPixel)
             {
                 case 32:
                     grayscale = scan0 =>
@@ -305,10 +322,10 @@ namespace ImageBird
                     throw new NotImplementedException(Resources.UnsupportedImageColorDepth);
             }
 
-            int bufferHeight = this.Buffer.Height;
-            int bufferWidth = this.Buffer.Width;
+            int bufferHeight = buffer.Content.Height;
+            int bufferWidth = buffer.Content.Width;
 
-            FastBitmap.Operation(this.Buffer, (data, scan0) =>
+            FastBitmap.Operation(buffer.Content, (data, scan0) =>
             {
                 Parallel.For(0, bufferHeight, yPos =>
                 {
@@ -316,12 +333,14 @@ namespace ImageBird
 
                     Parallel.For(0, localWidth, xPos =>
                     {
-                        byte* pixel = scan0 + (yPos * data.Stride) + ((xPos * this.bitsPerPixel) / 8);
+                        byte* pixel = scan0 + (yPos * data.Stride) + ((xPos * buffer.bitsPerPixel) / 8);
 
                         grayscale(pixel);
                     });
                 });
             });
+
+            return buffer;
         }
 
         /// <summary>
@@ -351,7 +370,7 @@ namespace ImageBird
         }
 
         /// <summary>
-        /// Applies the supplied kernel to the buffer.
+        /// Applies the supplied kernel to the FastBitmap.
         /// </summary>
         /// <param name="kernel">
         /// The kernel to apply. Assumed to be square and of odd dimensions.
@@ -364,20 +383,22 @@ namespace ImageBird
              Justification = "Unecessary newlines reduce readability due to the high nesting of scopes.")]
         [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1409:RemoveUnnecessaryCode",
             Justification = "Empty lock is intentional to ensure all threads exit before attempting disposal.")]
-        protected unsafe void KernelOperation(Kernel kernel)
+        protected unsafe FastBitmap KernelOperation(Kernel kernel)
         {
+            FastBitmap buffer = new FastBitmap(this.Content, this.bitsPerPixel);
+
             Rectangle cropRect = new Rectangle(
                 kernel.Center,
                 kernel.Center,
-                this.Buffer.Width - (kernel.Center * 2),
-                this.Buffer.Height - (kernel.Center * 2));
+                buffer.Content.Width - (kernel.Center * 2),
+                buffer.Content.Height - (kernel.Center * 2));
 
             Bitmap subBuffer = new Bitmap(cropRect.Width, cropRect.Height);
 
             using (Graphics graphics = Graphics.FromImage(subBuffer))
             {
                 graphics.DrawImage(
-                    this.Buffer,
+                    buffer.Content,
                     new Rectangle(0, 0, subBuffer.Width, subBuffer.Height),
                     cropRect,
                     GraphicsUnit.Pixel);
@@ -386,7 +407,7 @@ namespace ImageBird
             FastBitmap.Operation(subBuffer, (subData, subScan0) =>
             {
                 // ReSharper disable AccessToDisposedClosure
-                FastBitmap.Operation(this.Buffer, (data, scan0) =>
+                FastBitmap.Operation(buffer.Content, (data, scan0) =>
                 // ReSharper restore AccessToDisposedClosure
                 {
                     int localWidth = subBuffer.Width;
@@ -398,7 +419,7 @@ namespace ImageBird
                             byte* current =
                                 subScan0 +
                                 (yPos * subData.Stride) +
-                                ((xPos * this.bitsPerPixel) / 8);
+                                ((xPos * buffer.bitsPerPixel) / 8);
 
                             double newR = 0D;
                             double newG = 0D;
@@ -413,7 +434,7 @@ namespace ImageBird
                                     byte* local =
                                         scan0 +
                                         ((yPos + kernel.Center + localY) * data.Stride) +
-                                        (((xPos + kernel.Center + localX) * this.bitsPerPixel) / 8);
+                                        (((xPos + kernel.Center + localX) * buffer.bitsPerPixel) / 8);
 
                                     newR += ((double)(*local)) * scaling;
                                     newG += ((double)(*(local + 1))) * scaling;
@@ -429,8 +450,10 @@ namespace ImageBird
                 });
             });
 
-            this.Buffer.Dispose();
-            this.Buffer = subBuffer;
+            buffer.Content.Dispose();
+            buffer.Content = subBuffer;
+
+            return buffer;
         }
     }
 }

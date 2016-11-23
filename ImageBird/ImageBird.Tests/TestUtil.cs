@@ -36,7 +36,9 @@ namespace ImageBird.Tests
         /// </exception>
         public static bool ContentsEqual(Bitmap left, Bitmap right)
         {
+#pragma warning disable IDE0018 // Inline variable declaration
             Point? outBuffer;
+#pragma warning restore IDE0018 // Inline variable declaration
             return TestUtil.ContentsEqual(left, right, out outBuffer);
         }
 

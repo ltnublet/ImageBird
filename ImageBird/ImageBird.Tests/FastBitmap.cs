@@ -72,9 +72,7 @@ namespace ImageBird.Tests
             using (Bitmap expected = (Bitmap)Image.FromFile(expectedOutput))
             using (SUT.FastBitmap actual = SUT.FastBitmap.FromFile(input))
             {
-                actual.ScaleBy(factor);
-
-                FastBitmap.AssertContentsEqual(expected, actual.Buffer);
+                FastBitmap.AssertContentsEqual(expected, actual.ScaleBy(factor).Content);
             }
         }
 
@@ -87,9 +85,7 @@ namespace ImageBird.Tests
             using (Bitmap expected = (Bitmap)Image.FromFile(expectedOutput))
             using (SUT.FastBitmap actual = SUT.FastBitmap.FromFile(input))
             {
-                actual.Blur(sigma, weight);
-
-                FastBitmap.AssertContentsEqual(expected, actual.Buffer);
+                FastBitmap.AssertContentsEqual(expected, actual.Blur(sigma, weight).Content);
             }
         }
 
@@ -127,9 +123,7 @@ namespace ImageBird.Tests
             using (Bitmap expected = new Bitmap(Image.FromFile(expectedFile)))
             using (SUT.FastBitmap actual = SUT.FastBitmap.FromFile(actualFile))
             {
-                actual.ToGrayscale();
-
-                FastBitmap.AssertContentsEqual(expected, actual.Buffer);
+                FastBitmap.AssertContentsEqual(expected, actual.ToGrayscale().Content);
             }
         }
 
@@ -148,15 +142,15 @@ namespace ImageBird.Tests
             using (Bitmap expected = new Bitmap(Image.FromFile(TestData1_Pow2_KnownGood)))
             using (SUT.FastBitmap actual = SUT.FastBitmap.FromFile(FastBitmap.TestData1_KnownGood))
             {
-                actual.Pow(2);
-
-                FastBitmap.AssertContentsEqual(expected, actual.Buffer);
+                FastBitmap.AssertContentsEqual(expected, actual.Pow(2).Content);
             }
         }
 
         private static void AssertContentsEqual(Bitmap expected, Bitmap actual)
         {
+#pragma warning disable IDE0018 // Inline variable declaration
             Point? mismatch;
+#pragma warning restore IDE0018 // Inline variable declaration
             bool result = TestUtil.ContentsEqual(expected, actual, out mismatch) && !mismatch.HasValue;
 
             Assert.True(result, result ? string.Empty : $"Mismatch detected at {mismatch.Value.ToString()}");
