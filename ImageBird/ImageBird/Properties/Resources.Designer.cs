@@ -8,8 +8,8 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-using System;
 namespace ImageBird.Properties {
+    using System;
     
     
     /// <summary>
@@ -57,6 +57,15 @@ namespace ImageBird.Properties {
             }
             set {
                 resourceCulture = value;
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid number of angles specified..
+        /// </summary>
+        public static string InvalidNumberOfAnglesSpecified {
+            get {
+                return ResourceManager.GetString("InvalidNumberOfAnglesSpecified", resourceCulture);
             }
         }
         

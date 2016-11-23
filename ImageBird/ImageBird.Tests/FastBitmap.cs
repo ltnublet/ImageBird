@@ -146,6 +146,28 @@ namespace ImageBird.Tests
             }
         }
 
+        [Theory]
+        [InlineData(0)]
+        [InlineData(-1)]
+        public void RadonTransform_InvalidNumberOfAngles_ThrowsArgument(int numberOfAngles)
+        {
+            using (SUT.FastBitmap actual = SUT.FastBitmap.FromFile(FastBitmap.TestData1_KnownGood))
+            {
+                Assert.Throws<ArgumentException>(() => actual.RadonTransform(numberOfAngles));
+            }
+        }
+
+        [Fact(Skip = "This test isn't working correctly yet.")]
+        public void RadonTransform_ValidBitmap_ShouldSucceed()
+        {
+            using (SUT.FastBitmap input = SUT.FastBitmap.FromFile(FastBitmap.TestData1_KnownGood))
+            {
+                SUT.FastBitmap actual = input.ToGrayscale().Blur(1f, 5);
+                actual = actual.ScaleBy(actual.Max()).Pow(2);
+                actual.RadonTransform(actual.Content.Width).Transform.Content.Save("testing.png");
+            }
+        }
+
         private static void AssertContentsEqual(Bitmap expected, Bitmap actual)
         {
 #pragma warning disable IDE0018 // Inline variable declaration
