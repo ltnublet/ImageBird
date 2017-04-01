@@ -11,6 +11,12 @@ namespace ImageBird
     /// </summary>
     public class Kernel : ICloneable
     {
+        private static Lazy<Kernel> horizontalSobel = new Lazy<Kernel>(() =>
+            new Kernel(new double[,] { { 1D, 0D, -1D }, { 2D, 0D, -2D }, { 1D, 0D, -1D } }));
+
+        private static Lazy<Kernel> verticalSobel = new Lazy<Kernel>(() =>
+            new Kernel(new double[,] { { 1D, 2D, 1D }, { 0D, 0D, 0D }, { -1D, -2D, -1D } }));
+
         /// <summary>
         /// Instantiates a new Kernel with the specified contents.
         /// </summary>
@@ -20,6 +26,28 @@ namespace ImageBird
             this.Contents = contents;
             this.Dimension = (int)Math.Sqrt(contents.Length);
             this.Center = this.Dimension / 2;
+        }
+
+        /// <summary>
+        /// The horizontal Sobel kernel.
+        /// </summary>
+        public static Kernel HorizontalSobel
+        {
+            get
+            {
+                return Kernel.horizontalSobel.Value;
+            }
+        }
+
+        /// <summary>
+        /// The vertical Sobel kernel.
+        /// </summary>
+        public static Kernel VerticalSobel
+        {
+            get
+            {
+                return Kernel.verticalSobel.Value;
+            }
         }
 
         /// <summary>

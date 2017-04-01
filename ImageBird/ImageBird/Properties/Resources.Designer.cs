@@ -70,6 +70,15 @@ namespace ImageBird.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Number of angles specified should be a power of two..
+        /// </summary>
+        public static string NumberOfAnglesShouldBePowerOfTwo {
+            get {
+                return ResourceManager.GetString("NumberOfAnglesShouldBePowerOfTwo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Specified file did not exist..
         /// </summary>
         public static string SpecifiedFileDidNotExist {

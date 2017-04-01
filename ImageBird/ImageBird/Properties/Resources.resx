@@ -121,6 +121,10 @@
     <value>Invalid number of angles specified.</value>
     <comment>Occurs when the Radon/Hough transform number of angles &lt;= 0</comment>
   </data>
+  <data name="NumberOfAnglesShouldBePowerOfTwo" xml:space="preserve">
+    <value>Number of angles specified should be a power of two.</value>
+    <comment>Occurs when the Radon/Hough transform number of angles is not a power of two.</comment>
+  </data>
   <data name="SpecifiedFileDidNotExist" xml:space="preserve">
     <value>Specified file did not exist.</value>
   </data>

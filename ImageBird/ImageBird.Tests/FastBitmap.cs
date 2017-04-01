@@ -24,6 +24,7 @@ namespace ImageBird.Tests
         private const string TestData1_BlurSigma1478Weight5_KnownGood = ResourcePath + "TestData1_BlurSigma1.478Weight5_KnownGood.png";
         private const string TestData1_DivideBy32_KnownGood = ResourcePath + "TestData1_DivideBy32_KnownGood.png";
         private const string TestData1_DivideBy128_KnownGood = ResourcePath + "TestData1_DivideBy128_KnownGood.png";
+        private const string TestData1_EdgeDetect_KnownGood = ResourcePath + "TestData1_EdgeDetect_KnownGood.png";
         private const string TestData1_Pow2_KnownGood = ResourcePath + "TestData1_Pow2_KnownGood.png";
         private const string TestData2_KnownGood = ResourcePath + "TestData2_KnownGood.png";
         private const string TestData2_GrayScale_KnownGood = ResourcePath + "TestData2_GrayScale_KnownGood.png";
@@ -83,6 +84,15 @@ namespace ImageBird.Tests
             using (SUT.FastBitmap actual = SUT.FastBitmap.FromFile(input))
             {
                 FastBitmap.AssertContentsEqual(expected, actual.Blur(sigma, weight).Content);
+            }
+        }
+
+        [Fact]
+        public void EdgeDetect_ValidBitmap_ShouldSucceed()
+        {
+            using (SUT.FastBitmap actual = SUT.FastBitmap.FromFile(TestData1_KnownGood))
+            {
+                actual.EdgeDetect().Content.Save("vertical.png");
             }
         }
 
@@ -161,7 +171,8 @@ namespace ImageBird.Tests
             {
                 SUT.FastBitmap actual = input.ToGrayscale().Blur(1f, 5);
                 actual = actual.ScaleBy(actual.Max()).Pow(2);
-                actual.RadonTransform(actual.Content.Width).Transform.Content.Save("testing.png");
+                actual.Content.Save("testing_before.png");
+                actual.RadonTransform(actual.Content.Width).Transform.Content.Save("testing_after.png");
             }
         }
 

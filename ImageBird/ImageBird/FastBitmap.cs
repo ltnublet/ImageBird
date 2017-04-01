@@ -139,6 +139,25 @@ namespace ImageBird
         }
 
         /// <summary>
+        /// Performs a Canny Edge Detect on the <see cref="FastBitmap"/>.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="FastBitmap"/> whose contents represent the edges of the current <see cref="FastBitmap"/>.
+        /// </returns>
+        public FastBitmap EdgeDetect()
+        {
+            FastBitmap horizontalBuffer = new FastBitmap(this.Content, this.bitsPerPixel);
+            FastBitmap verticalBuffer = new FastBitmap(this.Content, this.bitsPerPixel);
+
+            horizontalBuffer = horizontalBuffer.ToGrayscale().KernelOperation(Kernel.HorizontalSobel);
+            verticalBuffer = verticalBuffer.ToGrayscale().KernelOperation(Kernel.VerticalSobel);
+
+            throw new NotImplementedException("Need to compute magnitude, do snapping, etc.");
+
+            return verticalBuffer;
+        }
+
+        /// <summary>
         /// Returns the largest magnitude in the FastBitmap.
         /// </summary>
         /// <returns>
@@ -232,7 +251,7 @@ namespace ImageBird
         /// Performs a Radon transformation on the <see cref="FastBitmap"/>.
         /// </summary>
         /// <param name="numberOfAngles">
-        /// The number of angles the resulting <see cref="ProjectionResult"/> should contain.
+        /// The number of angles to consider. Should be a power of 2.
         /// </param>
         /// <returns>
         /// A <see cref="ProjectionResult"/> representing the produced transform.
@@ -242,6 +261,11 @@ namespace ImageBird
             if (numberOfAngles <= 0)
             {
                 throw new ArgumentException(Resources.InvalidNumberOfAnglesSpecified, nameof(numberOfAngles));
+            }
+
+            if ((numberOfAngles & (numberOfAngles - 1)) != 0)
+            {
+                throw new ArgumentException(Resources.NumberOfAnglesShouldBePowerOfTwo, nameof(numberOfAngles));
             }
 
             FastBitmap buffer = new FastBitmap(new Bitmap(this.Content.Width, this.Content.Height));
