@@ -1,21 +1,20 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading.Tasks;
 using ImageBird.Properties;
 
 namespace ImageBird
 {
-    using global::System.Diagnostics.CodeAnalysis;
-
     /// <summary>
     /// A Bitmap implementation with improved performance.
     /// </summary>
+    [SuppressMessage("Microsoft.StyleCop.CSharp.SpacingRules", "SA1003:SymbolsMustBeSpacedCorrectly", Justification = "Disabled due to unsafe code incorrectly triggering this rule. StyleCop thinks the pointer dereferencing asterisks are multiplication.")]
+    [SuppressMessage("Microsoft.StyleCop.CSharp.SpacingRules", "SA1009:ClosingParenthesisMustBeSpacedCorrectly", Justification = "Disabled due to unsafe code incorrectly triggering this rule. StyleCop thinks the pointer dereferencing asterisks are multiplication.")]
+    [SuppressMessage("Microsoft.StyleCop.CSharp.MaintainabilityRules", "SA1119:StatementMustNotUseUnnecessaryParenthesis", Justification = "Disabled due to heavy use of math in this file. Parenthesis are to clearly indicate to the reader the order of operations.")]
     public class FastBitmap : IDisposable
     {
         /// <summary>
@@ -138,12 +137,6 @@ namespace ImageBird
         /// <returns>
         /// The largest magnitude in the FastBitmap.
         /// </returns>
-        [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1115:ParameterMustFollowComma",
-             Justification = "Unecessary newlines reduce readability due to the high nesting of scopes.")]
-        [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1116:SplitParametersMustStartOnLineAfterDeclaration",
-             Justification = "Unecessary newlines reduce readability due to the high nesting of scopes.")]
-        [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1117:ParametersMustBeOnSameLineOrSeparateLines",
-             Justification = "Unecessary newlines reduce readability due to the high nesting of scopes.")]
         public unsafe ushort Max()
         {
             object theLock = new object();
@@ -153,31 +146,36 @@ namespace ImageBird
             {
                 int bpp = asGrayscale.bitsPerPixel;
 
-                FastBitmap.Operation(asGrayscale.Content, (data, scan0) =>
-                {
-                    Parallel.For(0, data.Height, yPos =>
+                FastBitmap.Operation(
+                    asGrayscale.Content, 
+                    (data, scan0) =>
                     {
-                        byte localMax = 0;
-
-                        for (int xPos = 0; xPos < data.Width; xPos++)
-                        {
-                            byte current = *FastBitmap.PixelPointer(scan0, xPos, yPos, data.Stride, bpp);
-
-                            if (current > localMax)
+                        Parallel.For(
+                            0, 
+                            data.Height, 
+                            yPos =>
                             {
-                                localMax = current;
-                            }
-                        }
+                                byte localMax = 0;
 
-                        lock (theLock)
-                        {
-                            if (localMax > returnValue)
-                            {
-                                returnValue = localMax;
-                            }
-                        }
+                                for (int xPos = 0; xPos < data.Width; xPos++)
+                                {
+                                    byte current = *FastBitmap.PixelPointer(scan0, xPos, yPos, data.Stride, bpp);
+
+                                    if (current > localMax)
+                                    {
+                                        localMax = current;
+                                    }
+                                }
+
+                                lock (theLock)
+                                {
+                                    if (localMax > returnValue)
+                                    {
+                                        returnValue = localMax;
+                                    }
+                                }
+                            });
                     });
-                });
             }
 
             return returnValue;
@@ -190,12 +188,6 @@ namespace ImageBird
         /// <param name="power">
         /// The power to raise each pixel's channel to.
         /// </param>
-        [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1115:ParameterMustFollowComma",
-             Justification = "Unecessary newlines reduce readability due to the high nesting of scopes.")]
-        [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1116:SplitParametersMustStartOnLineAfterDeclaration",
-             Justification = "Unecessary newlines reduce readability due to the high nesting of scopes.")]
-        [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1117:ParametersMustBeOnSameLineOrSeparateLines",
-             Justification = "Unecessary newlines reduce readability due to the high nesting of scopes.")]
         public unsafe FastBitmap Pow(ushort power)
         {
             FastBitmap buffer = new FastBitmap(this.Content, this.bitsPerPixel);
@@ -203,28 +195,36 @@ namespace ImageBird
             int bufferHeight = buffer.Content.Height;
             int bufferWidth = buffer.Content.Width;
 
-            FastBitmap.Operation(buffer.Content, (data, scan0) =>
-            {
-                Parallel.For(0, bufferHeight, yPos =>
+            FastBitmap.Operation(
+                buffer.Content, 
+                (data, scan0) =>
                 {
-                    int localWidth = bufferWidth;
+                    Parallel.For(
+                        0, 
+                        bufferHeight, 
+                        yPos =>
+                        {
+                            int localWidth = bufferWidth;
 
-                    Parallel.For(0, localWidth, xPos =>
-                    {
-                        byte* valR = FastBitmap.PixelPointer(scan0, xPos, yPos, data.Stride, buffer.bitsPerPixel);
-                        byte* valG = valR + 1;
-                        byte* valB = valR + 2;
+                            Parallel.For(
+                                0, 
+                                localWidth, 
+                                xPos =>
+                                {
+                                    byte* valR = FastBitmap.PixelPointer(scan0, xPos, yPos, data.Stride, buffer.bitsPerPixel);
+                                    byte* valG = valR + 1;
+                                    byte* valB = valR + 2;
 
-                        int newR = (int)Math.Pow(*valR, power);
-                        int newG = (int)Math.Pow(*valG, power);
-                        int newB = (int)Math.Pow(*valB, power);
+                                    int newR = (int)Math.Pow(*valR, power);
+                                    int newG = (int)Math.Pow(*valG, power);
+                                    int newB = (int)Math.Pow(*valB, power);
 
-                        *valR = (byte)(newR > 255 ? 255 : newR);
-                        *valG = (byte)(newG > 255 ? 255 : newG);
-                        *valB = (byte)(newB > 255 ? 255 : newB);
-                    });
+                                    *valR = (byte)(newR > 255 ? 255 : newR);
+                                    *valG = (byte)(newG > 255 ? 255 : newG);
+                                    *valB = (byte)(newB > 255 ? 255 : newB);
+                                });
+                        });
                 });
-            });
 
             return buffer;
         }
@@ -232,14 +232,6 @@ namespace ImageBird
         /// <summary>
         /// Performs a Radon transformation on the FastBitmap.
         /// </summary>
-        [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1115:ParameterMustFollowComma",
-             Justification = "Unecessary newlines reduce readability due to the high nesting of scopes.")]
-        [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1116:SplitParametersMustStartOnLineAfterDeclaration",
-             Justification = "Unecessary newlines reduce readability due to the high nesting of scopes.")]
-        [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1117:ParametersMustBeOnSameLineOrSeparateLines",
-             Justification = "Unecessary newlines reduce readability due to the high nesting of scopes.")]
-        [SuppressMessage("ReSharper", "InvertIf", 
-            Justification = "Inverting If reduces readability.")]
         public unsafe ProjectionResult RadonTransform(int numberOfAngles)
         {
             if (numberOfAngles <= 0)
@@ -266,89 +258,93 @@ namespace ImageBird
             int xOffset = (int)(xCenter + FastBitmap.RoundingFactor(xCenter));
             int yOffset = (int)(yCenter + FastBitmap.RoundingFactor(yCenter));
 
-            FastBitmap.Operation(this.Content, (data, scan0) =>
-            {
-                FastBitmap.Operation(buffer.Content, (subData, subScan0) =>
+            FastBitmap.Operation(
+                this.Content, 
+                (data, scan0) =>
                 {
-                    for (int k = 0; k < (numberOfAngles / 4) + 1; k++)
-                    {
-                        double theta = k * Math.PI / numberOfAngles;
-                        double alpha = Math.Tan(theta);
-
-                        for (int x = 0; x < diff; x++)
+                    FastBitmap.Operation(
+                        buffer.Content, 
+                        (subData, subScan0) =>
                         {
-                            double y = alpha * (x - xOffset);
-                            int yd = (int)(y + FastBitmap.RoundingFactor(y));
-                            if ((yd + yOffset >= 0)
-                                && (yd + yOffset < height)
-                                && (x < width))
+                            for (int k = 0; k < (numberOfAngles / 4) + 1; k++)
                             {
-                                // Originally: *ptr_radon_map->data(k, x) = img(x, yd + yOffset);
-                                *FastBitmap.PixelPointer(subScan0, k, x, subData.Stride, buffer.bitsPerPixel) 
-                                    = *FastBitmap.PixelPointer(scan0, x, yd + yOffset, data.Stride, this.bitsPerPixel);
+                                double theta = k * Math.PI / numberOfAngles;
+                                double alpha = Math.Tan(theta);
+
+                                for (int x = 0; x < diff; x++)
+                                {
+                                    double y = alpha * (x - xOffset);
+                                    int yd = (int)(y + FastBitmap.RoundingFactor(y));
+                                    if ((yd + yOffset >= 0)
+                                        && (yd + yOffset < height)
+                                        && (x < width))
+                                    {
+                                        // Originally: *ptr_radon_map->data(k, x) = img(x, yd + yOffset);
+                                        *FastBitmap.PixelPointer(subScan0, k, x, subData.Stride, buffer.bitsPerPixel) 
+                                            = *FastBitmap.PixelPointer(scan0, x, yd + yOffset, data.Stride, this.bitsPerPixel);
                                 
-                                pixelsPerLine[k]++;
+                                        pixelsPerLine[k]++;
+                                    }
+
+                                    if ((yd + xOffset >= 0)
+                                        && (yd + xOffset < width)
+                                        && (k != numberOfAngles / 4)
+                                        && (x < height))
+                                    {
+                                        // Originally: *ptr_radon_map->data(numberOfAngles / 2 - k, x) = img(yd + xOffset, x);
+                                        *FastBitmap.PixelPointer(
+                                            subScan0, 
+                                            (numberOfAngles / 2) - k, 
+                                            x, 
+                                            subData.Stride, 
+                                            buffer.bitsPerPixel)
+                                            = *FastBitmap.PixelPointer(scan0, yd + xOffset, x, data.Stride, this.bitsPerPixel);
+
+                                        pixelsPerLine[(numberOfAngles / 2) - k]++;
+                                    }
+                                }
                             }
 
-                            if ((yd + xOffset >= 0)
-                                && (yd + xOffset < width)
-                                && (k != numberOfAngles / 4)
-                                && (x < height))
+                            int j = 0;
+                            for (int k = 3 * numberOfAngles / 4; k < numberOfAngles; k++)
                             {
-                                // Originally: *ptr_radon_map->data(numberOfAngles / 2 - k, x) = img(yd + xOffset, x);
-                                *FastBitmap.PixelPointer(
-                                    subScan0, 
-                                    (numberOfAngles / 2) - k, 
-                                    x, 
-                                    subData.Stride, 
-                                    buffer.bitsPerPixel)
-                                    = *FastBitmap.PixelPointer(scan0, yd + xOffset, x, data.Stride, this.bitsPerPixel);
+                                double theta = k * Math.PI / numberOfAngles;
+                                double alpha = Math.Tan(theta);
+                                for (int x = 0; x < diff; x++)
+                                {
+                                    double y = alpha * (x - xOffset);
+                                    int yd = (int)(y + FastBitmap.RoundingFactor(y));
+                                    if ((yd + yOffset >= 0) && (yd + yOffset < height) && (x < width))
+                                    {
+                                        // Originally: *ptr_radon_map->data(k, x) = img(x, yd + yOffset);
+                                        *FastBitmap.PixelPointer(subScan0, k, x, subData.Stride, buffer.bitsPerPixel) =
+                                            *FastBitmap.PixelPointer(scan0, x, yd + yOffset, data.Stride, this.bitsPerPixel);
 
-                                pixelsPerLine[(numberOfAngles / 2) - k]++;
+                                        pixelsPerLine[k]++;
+                                    }
+                                    if ((yOffset - yd >= 0) 
+                                        && (yOffset - yd < width) 
+                                        && ((2 * yOffset) - x >= 0) 
+                                        && ((2 * yOffset) - x < height) 
+                                        && (k != (3 * numberOfAngles) / 4))
+                                    {
+                                        // Originally: *ptr_radon_map->data(k - j, x) = img(-yd + yOffset, -(x - yOffset) + yOffset);
+                                        *FastBitmap.PixelPointer(subScan0, k - j, x, subData.Stride, buffer.bitsPerPixel) =
+                                            *FastBitmap.PixelPointer(
+                                                scan0,
+                                                -yd + yOffset,
+                                                -(x - yOffset) + yOffset,
+                                                data.Stride,
+                                                this.bitsPerPixel);
+
+                                        pixelsPerLine[k - j]++;
+                                    }
+                                }
+
+                                j += 2;
                             }
-                        }
-                    }
-
-                    int j = 0;
-                    for (int k = 3 * numberOfAngles / 4; k < numberOfAngles; k++)
-                    {
-                        double theta = k * Math.PI / numberOfAngles;
-                        double alpha = Math.Tan(theta);
-                        for (int x = 0; x < diff; x++)
-                        {
-                            double y = alpha * (x - xOffset);
-                            int yd = (int)(y + FastBitmap.RoundingFactor(y));
-                            if ((yd + yOffset >= 0) && (yd + yOffset < height) && (x < width))
-                            {
-                                // Originally: *ptr_radon_map->data(k, x) = img(x, yd + yOffset);
-                                *FastBitmap.PixelPointer(subScan0, k, x, subData.Stride, buffer.bitsPerPixel) =
-                                    *FastBitmap.PixelPointer(scan0, x, yd + yOffset, data.Stride, this.bitsPerPixel);
-
-                                pixelsPerLine[k]++;
-                            }
-                            if ((yOffset - yd >= 0) 
-                                && (yOffset - yd < width) 
-                                && ((2 * yOffset) - x >= 0) 
-                                && ((2 * yOffset) - x < height) 
-                                && (k != (3 * numberOfAngles) / 4))
-                            {
-                                // Originally: *ptr_radon_map->data(k - j, x) = img(-yd + yOffset, -(x - yOffset) + yOffset);
-                                *FastBitmap.PixelPointer(subScan0, k - j, x, subData.Stride, buffer.bitsPerPixel) =
-                                    *FastBitmap.PixelPointer(
-                                        scan0,
-                                        -yd + yOffset,
-                                        -(x - yOffset) + yOffset,
-                                        data.Stride,
-                                        this.bitsPerPixel);
-
-                                pixelsPerLine[k - j]++;
-                            }
-                        }
-
-                        j += 2;
-                    }
+                        });
                 });
-            });
 
             return new ProjectionResult(buffer, pixelsPerLine);
         }
@@ -360,18 +356,6 @@ namespace ImageBird
         /// <param name="factor">
         /// The factor by which to scale the magnitude of each pixel.
         /// </param>
-        [SuppressMessage("StyleCop.CSharp.SpacingRules", "SA1003:SymbolsMustBeSpacedCorrectly",
-            Justification = "Spacing is valid - the asterisk isn't multiplying, but rather dereferencing.")]
-        [SuppressMessage("StyleCop.CSharp.SpacingRules", "SA1009:ClosingParenthesisMustBeSpacedCorrectly",
-            Justification = "Spacing is valid - parenthesis due to dereferencing and casting.")]
-        [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1115:ParameterMustFollowComma",
-             Justification = "Unecessary newlines reduce readability due to the high nesting of scopes.")]
-        [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1116:SplitParametersMustStartOnLineAfterDeclaration",
-             Justification = "Unecessary newlines reduce readability due to the high nesting of scopes.")]
-        [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1117:ParametersMustBeOnSameLineOrSeparateLines",
-             Justification = "Unecessary newlines reduce readability due to the high nesting of scopes.")]
-        [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1119:StatementMustNotUseUnnecessaryParenthesis", 
-            Justification = "Parenthesis are necessary due to casting of incremented pointer.")]
         public unsafe FastBitmap ScaleBy(ushort factor)
         {
             FastBitmap buffer = new FastBitmap(this.Content, this.bitsPerPixel);
@@ -410,11 +394,6 @@ namespace ImageBird
         /// <summary>
         /// Converts the FastBitmap to grayscale.
         /// </summary>
-        [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1117:ParametersMustBeOnSameLineOrSeparateLines", Justification = "Reviewed. Suppression is OK here.")]
-        [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1115:ParameterMustFollowComma", 
-            Justification = "Unnecessary newlines reduce readability due to high nesting of scopes.")]
-        [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1116:SplitParametersMustStartOnLineAfterDeclaration", 
-            Justification = "Unnecessary newlines reduce readability due to high nesting of scopes.")]
         public unsafe FastBitmap ToGrayscale()
         {
             FastBitmap buffer = new FastBitmap(this.Content, this.bitsPerPixel);
@@ -494,14 +473,6 @@ namespace ImageBird
         /// <param name="kernel">
         /// The kernel to apply. Assumed to be square and of odd dimensions.
         /// </param>
-        [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1115:ParameterMustFollowComma",
-             Justification = "Unecessary newlines reduce readability due to the high nesting of scopes.")]
-        [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1116:SplitParametersMustStartOnLineAfterDeclaration",
-             Justification = "Unecessary newlines reduce readability due to the high nesting of scopes.")]
-        [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1117:ParametersMustBeOnSameLineOrSeparateLines",
-             Justification = "Unecessary newlines reduce readability due to the high nesting of scopes.")]
-        [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1409:RemoveUnnecessaryCode",
-            Justification = "Empty lock is intentional to ensure all threads exit before attempting disposal.")]
         protected unsafe FastBitmap KernelOperation(Kernel kernel)
         {
             FastBitmap buffer = new FastBitmap(this.Content, this.bitsPerPixel);

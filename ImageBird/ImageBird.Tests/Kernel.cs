@@ -13,12 +13,6 @@ namespace ImageBird.Tests
     /// <summary>
     /// Tests for the ImageBird.Kernel class.
     /// </summary>
-    [SuppressMessage("ReSharper", "InconsistentNaming", 
-        Justification = "Underscores are used to make names human-readable.")]
-    [SuppressMessage("ReSharper", "StyleCop.SA1310", 
-        Justification = "Underscores are used to make names human-readable.")]
-    [SuppressMessage("ReSharper", "StyleCop.SA1600", 
-        Justification = "Test names should adequately describe the SUT, supplied data, and outcome.")]
     public class Kernel
     {
         private static readonly double[,] TestData1_KnownGood = { { 1D, 2D, 3D }, { 4D, 5D, 6D }, { 7D, 8D, 9D } };

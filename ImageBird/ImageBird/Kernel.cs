@@ -6,8 +6,6 @@ using System.Threading.Tasks;
 
 namespace ImageBird
 {
-    using global::System.Diagnostics.CodeAnalysis;
-
     /// <summary>
     /// Represents a square 2-dimensional kernel used for kernel convolution.
     /// </summary>
@@ -103,8 +101,6 @@ namespace ImageBird
         /// <summary>
         /// Returns a string that represents the Kernel.
         /// </summary>
-        [SuppressMessage("ReSharper", "UseStringInterpolation", 
-            Justification = "String interpolation reduces readability due to the complexity of the Join.")]
         public override string ToString()
         {
             IEnumerable<double> asEnumerable = this.Contents.Cast<double>();

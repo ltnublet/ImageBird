@@ -13,9 +13,6 @@ namespace ImageBird.Tests
     /// <summary>
     /// Tests for the ImageBird.FastBitmap class.
     /// </summary>
-    [SuppressMessage("ReSharper", "InconsistentNaming", Justification = "Underscores are used to make names human-readable.")]
-    [SuppressMessage("ReSharper", "StyleCop.SA1310", Justification = "Underscores are used to make names human-readable.")]
-    [SuppressMessage("ReSharper", "StyleCop.SA1600", Justification = "Test names should adequately describe the SUT, supplied data, and outcome.")]
     public class FastBitmap
     {
         private const string ResourcePath = @"..\..\Resources\";
