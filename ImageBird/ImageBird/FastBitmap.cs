@@ -12,14 +12,22 @@ namespace ImageBird
     /// <summary>
     /// A Bitmap implementation with improved performance.
     /// </summary>
-    [SuppressMessage("Microsoft.StyleCop.CSharp.SpacingRules", "SA1003:SymbolsMustBeSpacedCorrectly", Justification = "Disabled due to unsafe code incorrectly triggering this rule. StyleCop thinks the pointer dereferencing asterisks are multiplication.")]
-    [SuppressMessage("Microsoft.StyleCop.CSharp.SpacingRules", "SA1009:ClosingParenthesisMustBeSpacedCorrectly", Justification = "Disabled due to unsafe code incorrectly triggering this rule. StyleCop thinks the pointer dereferencing asterisks are multiplication.")]
-    [SuppressMessage("Microsoft.StyleCop.CSharp.MaintainabilityRules", "SA1119:StatementMustNotUseUnnecessaryParenthesis", Justification = "Disabled due to heavy use of math in this file. Parenthesis are to clearly indicate to the reader the order of operations.")]
+    [SuppressMessage(
+        "Microsoft.StyleCop.CSharp.SpacingRules", 
+        "SA1003:SymbolsMustBeSpacedCorrectly", 
+        Justification = "Disabled due to unsafe code incorrectly triggering this rule. StyleCop thinks the pointer dereferencing asterisks are multiplication.")]
+    [SuppressMessage(
+        "Microsoft.StyleCop.CSharp.SpacingRules", 
+        "SA1009:ClosingParenthesisMustBeSpacedCorrectly", 
+        Justification = "Disabled due to unsafe code incorrectly triggering this rule. StyleCop thinks the pointer dereferencing asterisks are multiplication.")]
+    [SuppressMessage(
+        "Microsoft.StyleCop.CSharp.MaintainabilityRules", 
+        "SA1119:StatementMustNotUseUnnecessaryParenthesis", 
+        Justification = "Disabled due to heavy use of math in this file. Parenthesis are to clearly indicate to the reader the order of operations.")]
     public class FastBitmap : IDisposable
     {
         /// <summary>
-        /// We cache the bits per pixel on instantiation - it's inordinately expensive to compute, and won't
-        /// change for the lifetime of the FastBitmap instance.
+        /// We cache the bits per pixel on instantiation - it's inordinately expensive to compute, and won't change for the lifetime of the FastBitmap instance.
         /// </summary>
         private readonly int bitsPerPixel;
 
@@ -46,11 +54,10 @@ namespace ImageBird
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="FastBitmap"/> class. Does not check supplied parameters
-        /// for validity.
+        /// Initializes a new instance of the <see cref="FastBitmap"/> class. Does not check supplied parameters for validity.
         /// </summary>
         /// <param name="bitmap">
-        /// The bitmap to convert to a FastBitmap.
+        /// The <see cref="Bitmap"/> to convert to a <see cref="FastBitmap"/>.
         /// </param>
         /// <param name="bitsPerPixel">
         /// The bits per pixel of the supplied bitmap.
@@ -62,7 +69,7 @@ namespace ImageBird
         }
 
         /// <summary>
-        /// Performs a locking data operation on the supplied BitmapData object.
+        /// Performs a locking data operation on the supplied <see cref="BitmapData"/> object.
         /// </summary>
         /// <param name="data">
         /// The BitmapData.
@@ -72,27 +79,27 @@ namespace ImageBird
         /// </param>
         protected unsafe delegate void LockingDataOperation(BitmapData data, byte* scan0);
 
-        private unsafe delegate void ToGrayscaleOperation(byte* scan0);
+        private unsafe delegate void ToGrayscaleOperation(byte* scan0, int yPos, int stride, int width);
 
         /// <summary>
-        /// The contents of the current FastBitmap.
+        /// The contents of the current <see cref="FastBitmap"/>.
         /// </summary>
         public Bitmap Content { get; protected set; }
 
         /// <summary>
-        /// Creates a FastBitmap from the specified file.
+        /// Creates a <see cref="FastBitmap"/> from the specified file.
         /// </summary>
         /// <param name="path">
         /// The path to the file.
         /// </param>
         /// <returns>
-        /// The FastBitmap created from the file.
+        /// The <see cref="FastBitmap"/> created from the file.
         /// </returns>
         /// <exception cref="ArgumentNullException">
         /// Occurs when the supplied path is null.
         /// </exception>
         /// <exception cref="ArgumentException">
-        /// Occurs when the supplied path does not point to a valid Bitmap.
+        /// Occurs when the supplied path does not point to a valid <see cref="Bitmap"/>.
         /// </exception>
         public static FastBitmap FromFile(string path)
         {
@@ -110,7 +117,7 @@ namespace ImageBird
         }
 
         /// <summary>
-        /// Performs a gaussian blur on the image using the specified sigma and weight.
+        /// Performs a gaussian blur on the image using the specified <paramref name="sigma"/> and <paramref name="weight"/>.
         /// </summary>
         /// <param name="sigma">
         /// The factor by which to blur. Larger sigmas produce greater blurring.
@@ -124,7 +131,7 @@ namespace ImageBird
         }
 
         /// <summary>
-        /// Disposes the FastBitmap, freeing it's resources.
+        /// Disposes the <see cref="FastBitmap"/>, freeing it's resources.
         /// </summary>
         public void Dispose()
         {
@@ -146,48 +153,45 @@ namespace ImageBird
             {
                 int bpp = asGrayscale.bitsPerPixel;
 
-                FastBitmap.Operation(
-                    asGrayscale.Content, 
-                    (data, scan0) =>
+                FastBitmap.Operation(asGrayscale.Content, (data, scan0) =>
+                {
+                    Parallel.For(0, data.Height, yPos =>
                     {
-                        Parallel.For(
-                            0, 
-                            data.Height, 
-                            yPos =>
+                        byte localMax = 0;
+
+                        for (int xPos = 0; xPos < data.Width; xPos++)
+                        {
+                            byte current = *FastBitmap.PixelPointer(scan0, xPos, yPos, data.Stride, bpp);
+
+                            if (current > localMax)
                             {
-                                byte localMax = 0;
+                                localMax = current;
+                            }
+                        }
 
-                                for (int xPos = 0; xPos < data.Width; xPos++)
-                                {
-                                    byte current = *FastBitmap.PixelPointer(scan0, xPos, yPos, data.Stride, bpp);
-
-                                    if (current > localMax)
-                                    {
-                                        localMax = current;
-                                    }
-                                }
-
-                                lock (theLock)
-                                {
-                                    if (localMax > returnValue)
-                                    {
-                                        returnValue = localMax;
-                                    }
-                                }
-                            });
+                        lock (theLock)
+                        {
+                            if (localMax > returnValue)
+                            {
+                                returnValue = localMax;
+                            }
+                        }
                     });
+                });
             }
 
             return returnValue;
         }
 
         /// <summary>
-        /// Raises the value of each pixel in the FastBitmap's channels to the supplied power. Channel values are
-        /// capped at 255.
+        /// Raises the value of each pixel in the <see cref="FastBitmap"/>'s channels to the supplied <paramref name="power"/>. Channel values are capped at 255.
         /// </summary>
         /// <param name="power">
         /// The power to raise each pixel's channel to.
         /// </param>
+        /// <returns>
+        /// A <see cref="FastBitmap"/> whose pixels are equal to the original's to the supplied <paramref name="power"/>.
+        /// </returns>
         public unsafe FastBitmap Pow(ushort power)
         {
             FastBitmap buffer = new FastBitmap(this.Content, this.bitsPerPixel);
@@ -195,43 +199,44 @@ namespace ImageBird
             int bufferHeight = buffer.Content.Height;
             int bufferWidth = buffer.Content.Width;
 
-            FastBitmap.Operation(
-                buffer.Content, 
-                (data, scan0) =>
+            FastBitmap.Operation(buffer.Content, (data, scan0) =>
+            {
+                Parallel.For(0, bufferHeight, yPos =>
                 {
+                    int localWidth = bufferWidth;
+
                     Parallel.For(
                         0, 
-                        bufferHeight, 
-                        yPos =>
+                        localWidth, 
+                        xPos =>
                         {
-                            int localWidth = bufferWidth;
+                            byte* valR = FastBitmap.PixelPointer(scan0, xPos, yPos, data.Stride, buffer.bitsPerPixel);
+                            byte* valG = valR + 1;
+                            byte* valB = valR + 2;
 
-                            Parallel.For(
-                                0, 
-                                localWidth, 
-                                xPos =>
-                                {
-                                    byte* valR = FastBitmap.PixelPointer(scan0, xPos, yPos, data.Stride, buffer.bitsPerPixel);
-                                    byte* valG = valR + 1;
-                                    byte* valB = valR + 2;
+                            int newR = (int)Math.Pow(*valR, power);
+                            int newG = (int)Math.Pow(*valG, power);
+                            int newB = (int)Math.Pow(*valB, power);
 
-                                    int newR = (int)Math.Pow(*valR, power);
-                                    int newG = (int)Math.Pow(*valG, power);
-                                    int newB = (int)Math.Pow(*valB, power);
-
-                                    *valR = (byte)(newR > 255 ? 255 : newR);
-                                    *valG = (byte)(newG > 255 ? 255 : newG);
-                                    *valB = (byte)(newB > 255 ? 255 : newB);
-                                });
+                            *valR = (byte)(newR > 255 ? 255 : newR);
+                            *valG = (byte)(newG > 255 ? 255 : newG);
+                            *valB = (byte)(newB > 255 ? 255 : newB);
                         });
                 });
+            });
 
             return buffer;
         }
 
         /// <summary>
-        /// Performs a Radon transformation on the FastBitmap.
+        /// Performs a Radon transformation on the <see cref="FastBitmap"/>.
         /// </summary>
+        /// <param name="numberOfAngles">
+        /// The number of angles the resulting <see cref="ProjectionResult"/> should contain.
+        /// </param>
+        /// <returns>
+        /// A <see cref="ProjectionResult"/> representing the produced transform.
+        /// </returns>
         public unsafe ProjectionResult RadonTransform(int numberOfAngles)
         {
             if (numberOfAngles <= 0)
@@ -258,104 +263,108 @@ namespace ImageBird
             int xOffset = (int)(xCenter + FastBitmap.RoundingFactor(xCenter));
             int yOffset = (int)(yCenter + FastBitmap.RoundingFactor(yCenter));
 
-            FastBitmap.Operation(
-                this.Content, 
-                (data, scan0) =>
+            FastBitmap.Operation(this.Content, (data, scan0) =>
+            {
+                FastBitmap.Operation(buffer.Content, (subData, subScan0) =>
                 {
-                    FastBitmap.Operation(
-                        buffer.Content, 
-                        (subData, subScan0) =>
+                    for (int k = 0; k < (numberOfAngles / 4) + 1; k++)
+                    {
+                        double theta = k * Math.PI / numberOfAngles;
+                        double alpha = Math.Tan(theta);
+
+                        for (int x = 0; x < diff; x++)
                         {
-                            for (int k = 0; k < (numberOfAngles / 4) + 1; k++)
+                            double y = alpha * (x - xOffset);
+                            int yd = (int)(y + FastBitmap.RoundingFactor(y));
+                            if ((yd + yOffset >= 0)
+                                && (yd + yOffset < height)
+                                && (x < width))
                             {
-                                double theta = k * Math.PI / numberOfAngles;
-                                double alpha = Math.Tan(theta);
-
-                                for (int x = 0; x < diff; x++)
-                                {
-                                    double y = alpha * (x - xOffset);
-                                    int yd = (int)(y + FastBitmap.RoundingFactor(y));
-                                    if ((yd + yOffset >= 0)
-                                        && (yd + yOffset < height)
-                                        && (x < width))
-                                    {
-                                        // Originally: *ptr_radon_map->data(k, x) = img(x, yd + yOffset);
-                                        *FastBitmap.PixelPointer(subScan0, k, x, subData.Stride, buffer.bitsPerPixel) 
-                                            = *FastBitmap.PixelPointer(scan0, x, yd + yOffset, data.Stride, this.bitsPerPixel);
+                                // Originally: *ptr_radon_map->data(k, x) = img(x, yd + yOffset);
+                                *FastBitmap.PixelPointer(subScan0, k, x, subData.Stride, buffer.bitsPerPixel) 
+                                    = *FastBitmap.PixelPointer(scan0, x, yd + yOffset, data.Stride, this.bitsPerPixel);
                                 
-                                        pixelsPerLine[k]++;
-                                    }
-
-                                    if ((yd + xOffset >= 0)
-                                        && (yd + xOffset < width)
-                                        && (k != numberOfAngles / 4)
-                                        && (x < height))
-                                    {
-                                        // Originally: *ptr_radon_map->data(numberOfAngles / 2 - k, x) = img(yd + xOffset, x);
-                                        *FastBitmap.PixelPointer(
-                                            subScan0, 
-                                            (numberOfAngles / 2) - k, 
-                                            x, 
-                                            subData.Stride, 
-                                            buffer.bitsPerPixel)
-                                            = *FastBitmap.PixelPointer(scan0, yd + xOffset, x, data.Stride, this.bitsPerPixel);
-
-                                        pixelsPerLine[(numberOfAngles / 2) - k]++;
-                                    }
-                                }
+                                pixelsPerLine[k]++;
                             }
 
-                            int j = 0;
-                            for (int k = 3 * numberOfAngles / 4; k < numberOfAngles; k++)
+                            if ((yd + xOffset >= 0)
+                                && (yd + xOffset < width)
+                                && (k != numberOfAngles / 4)
+                                && (x < height))
                             {
-                                double theta = k * Math.PI / numberOfAngles;
-                                double alpha = Math.Tan(theta);
-                                for (int x = 0; x < diff; x++)
-                                {
-                                    double y = alpha * (x - xOffset);
-                                    int yd = (int)(y + FastBitmap.RoundingFactor(y));
-                                    if ((yd + yOffset >= 0) && (yd + yOffset < height) && (x < width))
-                                    {
-                                        // Originally: *ptr_radon_map->data(k, x) = img(x, yd + yOffset);
-                                        *FastBitmap.PixelPointer(subScan0, k, x, subData.Stride, buffer.bitsPerPixel) =
-                                            *FastBitmap.PixelPointer(scan0, x, yd + yOffset, data.Stride, this.bitsPerPixel);
+                                // Originally: *ptr_radon_map->data(numberOfAngles / 2 - k, x) = img(yd + xOffset, x);
+                                *FastBitmap.PixelPointer(
+                                    subScan0, 
+                                    (numberOfAngles / 2) - k, 
+                                    x, 
+                                    subData.Stride, 
+                                    buffer.bitsPerPixel)
+                                    = *FastBitmap.PixelPointer(scan0, yd + xOffset, x, data.Stride, this.bitsPerPixel);
 
-                                        pixelsPerLine[k]++;
-                                    }
-                                    if ((yOffset - yd >= 0) 
-                                        && (yOffset - yd < width) 
-                                        && ((2 * yOffset) - x >= 0) 
-                                        && ((2 * yOffset) - x < height) 
-                                        && (k != (3 * numberOfAngles) / 4))
-                                    {
-                                        // Originally: *ptr_radon_map->data(k - j, x) = img(-yd + yOffset, -(x - yOffset) + yOffset);
-                                        *FastBitmap.PixelPointer(subScan0, k - j, x, subData.Stride, buffer.bitsPerPixel) =
-                                            *FastBitmap.PixelPointer(
-                                                scan0,
-                                                -yd + yOffset,
-                                                -(x - yOffset) + yOffset,
-                                                data.Stride,
-                                                this.bitsPerPixel);
-
-                                        pixelsPerLine[k - j]++;
-                                    }
-                                }
-
-                                j += 2;
+                                pixelsPerLine[(numberOfAngles / 2) - k]++;
                             }
-                        });
+                        }
+                    }
+
+                    int j = 0;
+                    for (int k = 3 * numberOfAngles / 4; k < numberOfAngles; k++)
+                    {
+                        double theta = k * Math.PI / numberOfAngles;
+                        double alpha = Math.Tan(theta);
+                        for (int x = 0; x < diff; x++)
+                        {
+                            double y = alpha * (x - xOffset);
+                            int yd = (int)(y + FastBitmap.RoundingFactor(y));
+                            if ((yd + yOffset >= 0) && (yd + yOffset < height) && (x < width))
+                            {
+                                // Originally: *ptr_radon_map->data(k, x) = img(x, yd + yOffset);
+                                *FastBitmap.PixelPointer(subScan0, k, x, subData.Stride, buffer.bitsPerPixel) =
+                                    *FastBitmap.PixelPointer(scan0, x, yd + yOffset, data.Stride, this.bitsPerPixel);
+
+                                pixelsPerLine[k]++;
+                            }
+
+                            if ((yOffset - yd >= 0) 
+                                && (yOffset - yd < width) 
+                                && ((2 * yOffset) - x >= 0) 
+                                && ((2 * yOffset) - x < height) 
+                                && (k != (3 * numberOfAngles) / 4))
+                            {
+                                // Originally: *ptr_radon_map->data(k - j, x) = img(-yd + yOffset, -(x - yOffset) + yOffset);
+                                *FastBitmap.PixelPointer(subScan0, k - j, x, subData.Stride, buffer.bitsPerPixel) =
+                                    *FastBitmap.PixelPointer(
+                                        scan0,
+                                        -yd + yOffset,
+                                        -(x - yOffset) + yOffset,
+                                        data.Stride,
+                                        this.bitsPerPixel);
+
+                                pixelsPerLine[k - j]++;
+                            }
+                        }
+
+                        j += 2;
+                    }
                 });
+            });
 
             return new ProjectionResult(buffer, pixelsPerLine);
         }
 
         /// <summary>
-        /// Iterates over the FastBitmap, scaling the magnitude of each pixel by the supplied factor. For example, 255
-        /// is no scaling, 128 doubles all channels, 64 quadruples all channels, etc. Channel values are capped to 255.
+        /// Iterates over the <see cref="FastBitmap"/>, scaling the magnitude of each pixel by the supplied <paramref name="factor"/>. Channel values are capped at 255.
         /// </summary>
         /// <param name="factor">
         /// The factor by which to scale the magnitude of each pixel.
         /// </param>
+        /// <returns>
+        /// A <see cref="FastBitmap"/> which has been scaled by the supplied <paramref name="factor"/>.
+        /// </returns>
+        /// <example>
+        /// ExampleFastBitmap.ScaleBy(255) results in no scaling.
+        /// ExampleFastBitmap.ScaleBy(128) doubles all channels.
+        /// ExampleFastBitmap.ScaleBy(64) quadruples all channels.
+        /// </example>
         public unsafe FastBitmap ScaleBy(ushort factor)
         {
             FastBitmap buffer = new FastBitmap(this.Content, this.bitsPerPixel);
@@ -392,8 +401,11 @@ namespace ImageBird
         }
 
         /// <summary>
-        /// Converts the FastBitmap to grayscale.
+        /// Converts the <see cref="FastBitmap"/> to grayscale.
         /// </summary>
+        /// <returns>
+        /// A <see cref="FastBitmap"/> whose contents are the same as the current <see cref="FastBitmap"/>, but in grayscale.
+        /// </returns>
         public unsafe FastBitmap ToGrayscale()
         {
             FastBitmap buffer = new FastBitmap(this.Content, this.bitsPerPixel);
@@ -405,17 +417,22 @@ namespace ImageBird
             switch (buffer.bitsPerPixel)
             {
                 case 32:
-                    grayscale = scan0 =>
+                    grayscale = (scan0, yPos, stride, width) =>
                     {
-                        int valR = *scan0;
-                        int valG = *(scan0 + 1);
-                        int valB = *(scan0 + 2);
+                        for (int xPos = 0; xPos < width; xPos++)
+                        {
+                            byte* pixel = FastBitmap.PixelPointer(scan0, xPos, yPos, stride, buffer.bitsPerPixel);
 
-                        byte avg = (byte)((double)(valR + valG + valB) / 3D);
+                            int valR = *pixel;
+                            int valG = *(pixel + 1);
+                            int valB = *(pixel + 2);
 
-                        *scan0 = avg;
-                        *(scan0 + 1) = avg;
-                        *(scan0 + 2) = avg;
+                            byte avg = (byte)((double)(valR + valG + valB) / 3D);
+
+                            *pixel = avg;
+                            *(pixel + 1) = avg;
+                            *(pixel + 2) = avg;
+                        }
                     };
                     break;
                 default:
@@ -430,11 +447,7 @@ namespace ImageBird
                 Parallel.For(0, bufferHeight, yPos =>
                 {
                     int localWidth = bufferWidth;
-
-                    Parallel.For(0, localWidth, xPos =>
-                    {
-                        grayscale(FastBitmap.PixelPointer(scan0, xPos, yPos, data.Stride, buffer.bitsPerPixel));
-                    });
+                    grayscale(scan0, yPos, data.Stride, localWidth);
                 });
             });
 
@@ -442,13 +455,13 @@ namespace ImageBird
         }
 
         /// <summary>
-        /// Performs the supplied operation on the supplied bitmap.
+        /// Performs the supplied <paramref name="operation"/> on the supplied <see cref="Bitmap"/> <paramref name="bitmap"/>.
         /// </summary>
         /// <param name="bitmap">
-        /// The bitmap to perform the operation on.
+        /// The <see cref="Bitmap"/> to perform the operation on.
         /// </param>
         /// <param name="operation">
-        /// The operation to perform on the contents of the supplied Bitmap.
+        /// The operation to perform on the contents of the supplied <see cref="Bitmap"/>.
         /// </param>
         protected static unsafe void Operation(Bitmap bitmap, LockingDataOperation operation)
         {
@@ -468,11 +481,14 @@ namespace ImageBird
         }
 
         /// <summary>
-        /// Applies the supplied kernel to the FastBitmap.
+        /// Applies the supplied <paramref name="kernel"/> to the <see cref="FastBitmap"/>.
         /// </summary>
         /// <param name="kernel">
-        /// The kernel to apply. Assumed to be square and of odd dimensions.
+        /// The <see cref="Kernel"/> to apply. Assumed to be of odd dimensions.
         /// </param>
+        /// <returns>
+        /// A <see cref="FastBitmap"/> whose contents are the current <see cref="FastBitmap"/>'s contents convolved with the <paramref name="kernel"/>.
+        /// </returns>
         protected unsafe FastBitmap KernelOperation(Kernel kernel)
         {
             FastBitmap buffer = new FastBitmap(this.Content, this.bitsPerPixel);
@@ -496,9 +512,7 @@ namespace ImageBird
 
             FastBitmap.Operation(subBuffer, (subData, subScan0) =>
             {
-                // ReSharper disable AccessToDisposedClosure
                 FastBitmap.Operation(buffer.Content, (data, scan0) =>
-                // ReSharper restore AccessToDisposedClosure
                 {
                     int localWidth = subBuffer.Width;
 
@@ -553,6 +567,12 @@ namespace ImageBird
         /// <summary>
         /// Computes the rounding factor for the supplied value. Aggressively inlined for performance.
         /// </summary>
+        /// <param name="value">
+        /// The value to compute the rounding factor for.
+        /// </param>
+        /// <returns>
+        /// The rounding factor associated with the <paramref name="value"/>.
+        /// </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static double RoundingFactor(double value)
         {
@@ -560,8 +580,7 @@ namespace ImageBird
         }
 
         /// <summary>
-        /// Computes the pointer to a pixel given by the supplied parameters. Aggressively inlined for performance.
-        /// Performs no validation - make sure the values supplied are accurate, as there's no bounds checking.
+        /// Computes the pointer to a pixel given by the supplied parameters. Aggressively inlined for performance. Performs no validation - make sure the values supplied are accurate, as there's no bounds checking.
         /// </summary>
         /// <param name="scan0">
         /// The base pointer for the Bitmap data.
@@ -573,7 +592,7 @@ namespace ImageBird
         /// The desired y coordinate.
         /// </param>
         /// <param name="stride">
-        /// The Bitmap stride (size of one horizontal line of the image).
+        /// The <see cref="Bitmap"/> stride (size of one horizontal line of the image).
         /// </param>
         /// <param name="bpp">
         /// The bits per pixel of the Bitmap.
