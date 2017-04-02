@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using ImageBird.Properties;
@@ -144,24 +146,150 @@ namespace ImageBird
         /// <returns>
         /// A <see cref="FastBitmap"/> whose contents represent the edges of the current <see cref="FastBitmap"/>.
         /// </returns>
-        public FastBitmap EdgeDetect()
+        public unsafe FastBitmap EdgeDetect()
         {
-            FastBitmap horizontalBuffer = new FastBitmap(this.Content, this.bitsPerPixel);
-            FastBitmap verticalBuffer = new FastBitmap(this.Content, this.bitsPerPixel);
+            FastBitmap buffer = 
+                new FastBitmap(this.Content, this.bitsPerPixel).ToGrayscale().KernelOperation(Kernel.HorizontalSobel);
+            FastBitmap output = 
+                new FastBitmap(this.Content, this.bitsPerPixel).ToGrayscale().KernelOperation(Kernel.VerticalSobel);
 
-            horizontalBuffer = horizontalBuffer.ToGrayscale().KernelOperation(Kernel.HorizontalSobel);
-            verticalBuffer = verticalBuffer.ToGrayscale().KernelOperation(Kernel.VerticalSobel);
+            ushort[,] angles = new ushort[buffer.Content.Width, buffer.Content.Height];
 
-            throw new NotImplementedException("Need to compute magnitude, do snapping, etc.");
+            FastBitmap.Operation(buffer.Content, (bufferData, bufferScan0) =>
+            {
+                FastBitmap.Operation(output.Content, (verticalData, verticalScan0) =>
+                {
+                    int localWidth = bufferData.Width;
+                    int localHorizontalBpp = buffer.bitsPerPixel;
+                    int localVerticalBpp = buffer.bitsPerPixel;
 
-            return verticalBuffer;
+                    Parallel.For(0, bufferData.Height, yPos =>
+                    {
+                        for (int xPos = 0; xPos < localWidth; xPos++)
+                        {
+                            byte currentHorizontal = *FastBitmap.PixelPointer(
+                                bufferScan0, 
+                                xPos, 
+                                yPos, 
+                                bufferData.Stride, 
+                                localHorizontalBpp);
+                            byte currentVertical = *FastBitmap.PixelPointer(
+                                verticalScan0, 
+                                xPos, 
+                                yPos, 
+                                verticalData.Stride, 
+                                localVerticalBpp);
+
+                            byte magnitude = (byte)((
+                                255 * 
+                                    (ushort)Math.Sqrt(
+                                    ((currentHorizontal * currentHorizontal) 
+                                    + (currentVertical * currentHorizontal)))) 
+                                / 360);
+
+                            double temp = Math.Atan2(currentVertical, currentHorizontal);
+                            temp = temp > Math.PI ? temp - Math.PI : temp;
+
+                            if (temp <= Math.PI / 8)
+                            {
+                                angles[xPos, yPos] = 0;
+                            }
+                            else if (temp <= 3 * Math.PI / 8 )
+                            {
+                                angles[xPos, yPos] = 1;
+                            }
+                            else if (temp <= 5 * Math.PI / 8)
+                            {
+                                angles[xPos, yPos] = 2;
+                            }
+                            else if (temp <= 7 * Math.PI / 8)
+                            {
+                                angles[xPos, yPos] = 3;
+                            }
+                            else
+                            {
+                                angles[xPos, yPos] = 0;
+                            }
+
+                            byte* valR = FastBitmap.PixelPointer(bufferScan0, xPos, yPos, bufferData.Stride, localHorizontalBpp);
+                            byte* valG = valR + 1;
+                            byte* valB = valR + 2;
+                            byte* valA = valR + 3;
+
+                            *valR = magnitude;
+                            *valG = magnitude;
+                            *valB = magnitude;
+                            *valA = 255;
+                        }
+                    });
+                });
+            });
+
+            output.Dispose();
+            output = new FastBitmap(new Bitmap(buffer.Content.Width - 2, buffer.Content.Height - 2));
+
+            FastBitmap.Operation(output.Content, (outputData, outputScan0) =>
+            {
+                FastBitmap.Operation(buffer.Content, (bufferData, bufferScan0) =>
+                {
+                    int localWidth = output.Content.Width;
+                    int localBpp = buffer.bitsPerPixel;
+
+                    Parallel.For(1, output.Content.Height, yPos =>
+                    {
+                        for (int xPos = 1; xPos < localWidth; xPos++)
+                        {
+                            byte* currentR = FastBitmap.PixelPointer(bufferScan0, xPos, yPos, bufferData.Stride, localBpp);
+
+                            int prevX = 0;
+                            int prevY = 0;
+                            int nextX = 0;
+                            int nextY = 0;
+                            switch(angles[xPos - 1, yPos - 1])
+                            {
+                                case 1:
+                                    prevY = -1;
+                                    nextY = 1;
+                                    goto case 0; // Fallthrough to 0 to set prevX and nextX.
+                                case 3:
+                                    prevY = yPos + 1;
+                                    nextY = yPos - 1;
+                                    goto case 0; // Fallthrough to 0 to set prevX and nextX.
+                                case 0:
+                                    prevX = xPos - 1;
+                                    nextX = xPos + 1;
+                                    break;
+                                case 2:
+                                    prevY = yPos - 1;
+                                    nextY = yPos + 1;
+                                    break;
+                            }
+
+                            byte* outputA = FastBitmap.PixelPointer(outputScan0, xPos, yPos, outputData.Stride, output.bitsPerPixel) + 3;
+                            *outputA = 255;
+
+                            byte* previousR = FastBitmap.PixelPointer(bufferScan0, prevX, prevY, bufferData.Stride, buffer.bitsPerPixel);
+                            byte* nextR = FastBitmap.PixelPointer(bufferScan0, nextX, nextY, bufferData.Stride, buffer.bitsPerPixel);
+
+                            if (*currentR > *previousR && *currentR > *nextR)
+                            {
+                                *(outputA - 3) = *currentR;
+                                *(outputA - 2) = *currentR;
+                                *(outputA - 1) = *currentR;
+                            }
+                        }
+                    });
+                });
+            });
+
+            return output;
         }
 
         /// <summary>
-        /// Returns the largest magnitude in the FastBitmap.
+        /// Returns the largest magnitude in the <see cref="FastBitmap"/>.
         /// </summary>
         /// <returns>
-        /// The largest magnitude in the FastBitmap.
+        /// The largest magnitude in the <see cref="FastBitmap"/>.
         /// </returns>
         public unsafe ushort Max()
         {

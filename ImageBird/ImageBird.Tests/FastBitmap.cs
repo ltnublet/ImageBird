@@ -92,7 +92,8 @@ namespace ImageBird.Tests
         {
             using (SUT.FastBitmap actual = SUT.FastBitmap.FromFile(TestData1_KnownGood))
             {
-                actual.EdgeDetect().Content.Save("vertical.png");
+                var buffer = actual.EdgeDetect();
+                buffer.Content.Save("output.png");
             }
         }
 
