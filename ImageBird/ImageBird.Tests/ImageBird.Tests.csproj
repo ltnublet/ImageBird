@@ -29,6 +29,8 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <DocumentationFile>
+    </DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -89,6 +91,7 @@
     <Content Include="Resources\TestData1_BlurSigma1.478Weight5_KnownGood.png" />
     <Content Include="Resources\TestData1_BlurSigma1Weight25_KnownGood.png" />
     <Content Include="Resources\TestData1_BlurSigma1Weight5_KnownGood.png" />
+    <Content Include="Resources\TestData1_CannyEdgeDetect_KnownGood.png" />
     <Content Include="Resources\TestData1_DivideBy128_KnownGood.png" />
     <Content Include="Resources\TestData1_DivideBy32_KnownGood.png" />
     <Content Include="Resources\TestData1_Grayscale_KnownGood.png" />

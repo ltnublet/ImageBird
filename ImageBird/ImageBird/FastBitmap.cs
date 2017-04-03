@@ -232,44 +232,49 @@ namespace ImageBird
             {
                 FastBitmap.Operation(buffer.Content, (bufferData, bufferScan0) =>
                 {
-                    int localWidth = output.Content.Width;
+                    int localWidth = output.Content.Width + 1;
                     int localBpp = buffer.bitsPerPixel;
 
-                    Parallel.For(1, output.Content.Height, yPos =>
+                    for (int yPos = 1; yPos < output.Content.Height + 1; yPos++)
                     {
                         for (int xPos = 1; xPos < localWidth; xPos++)
                         {
-                            byte* currentR = FastBitmap.PixelPointer(bufferScan0, xPos, yPos, bufferData.Stride, localBpp);
+                            throw new NotImplementedException();
 
                             int prevX = 0;
                             int prevY = 0;
                             int nextX = 0;
                             int nextY = 0;
-                            switch(angles[xPos - 1, yPos - 1])
+                            switch (angles[xPos - 1, yPos - 1])
                             {
-                                case 1:
-                                    prevY = -1;
-                                    nextY = 1;
-                                    goto case 0; // Fallthrough to 0 to set prevX and nextX.
-                                case 3:
-                                    prevY = yPos + 1;
-                                    nextY = yPos - 1;
-                                    goto case 0; // Fallthrough to 0 to set prevX and nextX.
                                 case 0:
-                                    prevX = xPos - 1;
-                                    nextX = xPos + 1;
+                                    prevX = -1;
+                                    nextX = 1;
+                                    break;
+                                case 1:
+                                    prevX = -1;
+                                    nextX = 1;
+                                    prevY = 1;
+                                    nextY = -1;
                                     break;
                                 case 2:
-                                    prevY = yPos - 1;
-                                    nextY = yPos + 1;
+                                    prevY = -1;
+                                    nextY = 1;
+                                    break;
+                                case 3:
+                                    prevX = -1;
+                                    nextX = 1;
+                                    prevY = -1;
+                                    nextY = 1;
                                     break;
                             }
 
-                            byte* outputA = FastBitmap.PixelPointer(outputScan0, xPos, yPos, outputData.Stride, output.bitsPerPixel) + 3;
+                            byte* outputA = FastBitmap.PixelPointer(outputScan0, xPos - 1, yPos - 1, outputData.Stride, output.bitsPerPixel) + 3;
                             *outputA = 255;
 
-                            byte* previousR = FastBitmap.PixelPointer(bufferScan0, prevX, prevY, bufferData.Stride, buffer.bitsPerPixel);
-                            byte* nextR = FastBitmap.PixelPointer(bufferScan0, nextX, nextY, bufferData.Stride, buffer.bitsPerPixel);
+                            byte* currentR = FastBitmap.PixelPointer(bufferScan0, xPos, yPos, bufferData.Stride, localBpp);
+                            byte* previousR = FastBitmap.PixelPointer(bufferScan0, xPos + prevX, yPos + prevY, bufferData.Stride, buffer.bitsPerPixel);
+                            byte* nextR = FastBitmap.PixelPointer(bufferScan0, xPos + nextX, yPos + nextY, bufferData.Stride, buffer.bitsPerPixel);
 
                             if (*currentR > *previousR && *currentR > *nextR)
                             {
@@ -277,8 +282,14 @@ namespace ImageBird
                                 *(outputA - 2) = *currentR;
                                 *(outputA - 1) = *currentR;
                             }
+                            else
+                            {
+                                *currentR = 0;
+                                *(currentR + 1) = 0;
+                                *(currentR + 2) = 0;
+                            }
                         }
-                    });
+                    }
                 });
             });
 

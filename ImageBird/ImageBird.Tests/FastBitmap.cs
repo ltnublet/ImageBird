@@ -24,7 +24,7 @@ namespace ImageBird.Tests
         private const string TestData1_BlurSigma1478Weight5_KnownGood = ResourcePath + "TestData1_BlurSigma1.478Weight5_KnownGood.png";
         private const string TestData1_DivideBy32_KnownGood = ResourcePath + "TestData1_DivideBy32_KnownGood.png";
         private const string TestData1_DivideBy128_KnownGood = ResourcePath + "TestData1_DivideBy128_KnownGood.png";
-        private const string TestData1_EdgeDetect_KnownGood = ResourcePath + "TestData1_EdgeDetect_KnownGood.png";
+        private const string TestData1_EdgeDetect_KnownGood = ResourcePath + "TestData1_CannyEdgeDetect_KnownGood.png";
         private const string TestData1_Pow2_KnownGood = ResourcePath + "TestData1_Pow2_KnownGood.png";
         private const string TestData2_KnownGood = ResourcePath + "TestData2_KnownGood.png";
         private const string TestData2_GrayScale_KnownGood = ResourcePath + "TestData2_GrayScale_KnownGood.png";
@@ -90,10 +90,11 @@ namespace ImageBird.Tests
         [Fact]
         public void EdgeDetect_ValidBitmap_ShouldSucceed()
         {
-            using (SUT.FastBitmap actual = SUT.FastBitmap.FromFile(TestData1_KnownGood))
+            using (SUT.FastBitmap expected = SUT.FastBitmap.FromFile(TestData1_EdgeDetect_KnownGood))
+            using (SUT.FastBitmap actual = SUT.FastBitmap.FromFile(TestData1_KnownGood).EdgeDetect())
             {
-                var buffer = actual.EdgeDetect();
-                buffer.Content.Save("output.png");
+                actual.Content.Save("output.png");
+                FastBitmap.AssertContentsEqual(expected.Content, actual.Content);
             }
         }
 
@@ -180,11 +181,15 @@ namespace ImageBird.Tests
         private static void AssertContentsEqual(Bitmap expected, Bitmap actual)
         {
 #pragma warning disable IDE0018 // Inline variable declaration
-            Point? mismatch;
+            (Point point, Color left, Color right)? mismatch;
 #pragma warning restore IDE0018 // Inline variable declaration
             bool result = TestUtil.ContentsEqual(expected, actual, out mismatch) && !mismatch.HasValue;
 
-            Assert.True(result, result ? string.Empty : $"Mismatch detected at {mismatch.Value.ToString()}");
+            string message = mismatch.HasValue
+                ? $"Mismatch detected at {mismatch.Value.point.ToString()}: expected {mismatch.Value.left}, got {mismatch.Value.right}"
+                : "Mismatch detected, but was not due to color mismatch (did the bitmaps have the same dimensions?)";
+
+            Assert.True(result, result ? string.Empty : message);
         }
     }
 }

@@ -17,13 +17,13 @@ namespace ImageBird.Tests
     public static class TestUtil
     {
         /// <summary>
-        /// Compares two Bitmap objects and checks if their contents are equal.
+        /// Compares two <see cref="Bitmap"/>s and checks if their contents are equal.
         /// </summary>
         /// <param name="left">
-        /// The first Bitmap.
+        /// The first <see cref="Bitmap"/>.
         /// </param>
         /// <param name="right">
-        /// The second Bitmap.
+        /// The second <see cref="Bitmap"/>.
         /// </param>
         /// <returns>
         /// True if the contents are equal, and false otherwise.
@@ -37,28 +37,27 @@ namespace ImageBird.Tests
         public static bool ContentsEqual(Bitmap left, Bitmap right)
         {
 #pragma warning disable IDE0018 // Inline variable declaration
-            Point? outBuffer;
+            (Point point, Color left, Color right)? outBuffer;
 #pragma warning restore IDE0018 // Inline variable declaration
             return TestUtil.ContentsEqual(left, right, out outBuffer);
         }
 
         /// <summary>
-        /// Compares two Bitmap objects and checks if their contents are equal, outputting the indices at which the
-        /// mismatch occurred (or null if indices do not apply to the situation).
+        /// Compares two <see cref="Bitmap"/>s and checks if their contents are equal, outputting the mismatch and the indices at which the mismatch occurred (or null if indices do not apply to the situation).
         /// </summary>
         /// <param name="left">
-        /// The first Bitmap.
+        /// The first <see cref="Bitmap"/>.
         /// </param>
         /// <param name="right">
-        /// The second Bitmap.
+        /// The second <see cref="Bitmap"/>.
         /// </param>
         /// <param name="mismatch">
-        /// The indices at which the mismatch was detected (or null if indices do not apply to the situation).
+        /// Out variable to store the mismatch and its indices (or null if indices do not apply to the situation).
         /// </param>
         /// <returns>
         /// True if the contents are equal, and false otherwise.
         /// </returns>
-        public static bool ContentsEqual(Bitmap left, Bitmap right, out Point? mismatch)
+        public static bool ContentsEqual(Bitmap left, Bitmap right, out (Point point, Color left, Color right)? mismatch)
         {
             mismatch = null;
 
@@ -101,7 +100,7 @@ namespace ImageBird.Tests
 
                     if (!leftPixel.Equals(rightPixel))
                     {
-                        mismatch = new Point(xPos, yPos);
+                        mismatch = (new Point(xPos, yPos), leftPixel, rightPixel);
                         return false;
                     }
                 }
