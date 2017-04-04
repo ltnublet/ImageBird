@@ -39,7 +39,7 @@ namespace ImageBird
         /// <param name="bitmap">
         /// The bitmap to convert to a FastBitmap.
         /// </param>
-        public unsafe FastBitmap(Bitmap bitmap)
+        public FastBitmap(Bitmap bitmap)
         {
             if (bitmap == null)
             {
@@ -64,17 +64,32 @@ namespace ImageBird
         /// <param name="bitsPerPixel">
         /// The bits per pixel of the supplied bitmap.
         /// </param>
-        protected unsafe FastBitmap(Bitmap bitmap, int bitsPerPixel)
+        protected FastBitmap(Bitmap bitmap, int bitsPerPixel)
         {
             this.Content = (Bitmap)bitmap.Clone();
             this.bitsPerPixel = bitsPerPixel;
         }
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="FastBitmap"/> class with a new <see cref="Bitmap"/> whose pixels have a value 0 for all channels. Does not check supplied parameters for validity.
+        /// </summary>
+        /// <param name="width">
+        /// The width of the <see cref="FastBitmap"/>.
+        /// </param>
+        /// <param name="height">
+        /// The height of the <see cref="FastBitmap"/>.
+        /// </param>
+        protected FastBitmap(int width, int height)
+        {
+            this.Content = new Bitmap(width, height);
+            this.bitsPerPixel = Image.GetPixelFormatSize(this.Content.PixelFormat);
+        }
+
+        /// <summary>
         /// Performs a locking data operation on the supplied <see cref="BitmapData"/> object.
         /// </summary>
         /// <param name="data">
-        /// The BitmapData.
+        /// The <see cref="BitmapData"/>.
         /// </param>
         /// <param name="scan0">
         /// The base address.
@@ -148,85 +163,13 @@ namespace ImageBird
         /// </returns>
         public unsafe FastBitmap EdgeDetect()
         {
-            FastBitmap buffer = 
-                new FastBitmap(this.Content, this.bitsPerPixel).ToGrayscale().KernelOperation(Kernel.HorizontalSobel);
-            FastBitmap output = 
-                new FastBitmap(this.Content, this.bitsPerPixel).ToGrayscale().KernelOperation(Kernel.VerticalSobel);
+            (FastBitmap magnitude, double[,] thetas) edgeDetect = this.Sobel(computeThetas: true);
+            FastBitmap buffer = edgeDetect.magnitude;
+            double[,] angles = edgeDetect.thetas;
+            
+            FastBitmap output = new FastBitmap(new Bitmap(buffer.Content.Width - 2, buffer.Content.Height - 2));
 
-            ushort[,] angles = new ushort[buffer.Content.Width, buffer.Content.Height];
-
-            FastBitmap.Operation(buffer.Content, (bufferData, bufferScan0) =>
-            {
-                FastBitmap.Operation(output.Content, (verticalData, verticalScan0) =>
-                {
-                    int localWidth = bufferData.Width;
-                    int localHorizontalBpp = buffer.bitsPerPixel;
-                    int localVerticalBpp = buffer.bitsPerPixel;
-
-                    Parallel.For(0, bufferData.Height, yPos =>
-                    {
-                        for (int xPos = 0; xPos < localWidth; xPos++)
-                        {
-                            byte currentHorizontal = *FastBitmap.PixelPointer(
-                                bufferScan0, 
-                                xPos, 
-                                yPos, 
-                                bufferData.Stride, 
-                                localHorizontalBpp);
-                            byte currentVertical = *FastBitmap.PixelPointer(
-                                verticalScan0, 
-                                xPos, 
-                                yPos, 
-                                verticalData.Stride, 
-                                localVerticalBpp);
-
-                            byte magnitude = (byte)((
-                                255 * 
-                                    (ushort)Math.Sqrt(
-                                    ((currentHorizontal * currentHorizontal) 
-                                    + (currentVertical * currentHorizontal)))) 
-                                / 360);
-
-                            double temp = Math.Atan2(currentVertical, currentHorizontal);
-                            temp = temp > Math.PI ? temp - Math.PI : temp;
-
-                            if (temp <= Math.PI / 8)
-                            {
-                                angles[xPos, yPos] = 0;
-                            }
-                            else if (temp <= 3 * Math.PI / 8 )
-                            {
-                                angles[xPos, yPos] = 1;
-                            }
-                            else if (temp <= 5 * Math.PI / 8)
-                            {
-                                angles[xPos, yPos] = 2;
-                            }
-                            else if (temp <= 7 * Math.PI / 8)
-                            {
-                                angles[xPos, yPos] = 3;
-                            }
-                            else
-                            {
-                                angles[xPos, yPos] = 0;
-                            }
-
-                            byte* valR = FastBitmap.PixelPointer(bufferScan0, xPos, yPos, bufferData.Stride, localHorizontalBpp);
-                            byte* valG = valR + 1;
-                            byte* valB = valR + 2;
-                            byte* valA = valR + 3;
-
-                            *valR = magnitude;
-                            *valG = magnitude;
-                            *valB = magnitude;
-                            *valA = 255;
-                        }
-                    });
-                });
-            });
-
-            output.Dispose();
-            output = new FastBitmap(new Bitmap(buffer.Content.Width - 2, buffer.Content.Height - 2));
+            throw new NotImplementedException("Investigate KernelOperation");
 
             FastBitmap.Operation(output.Content, (outputData, outputScan0) =>
             {
@@ -239,8 +182,6 @@ namespace ImageBird
                     {
                         for (int xPos = 1; xPos < localWidth; xPos++)
                         {
-                            throw new NotImplementedException();
-
                             int prevX = 0;
                             int prevY = 0;
                             int nextX = 0;
@@ -278,9 +219,9 @@ namespace ImageBird
 
                             if (*currentR > *previousR && *currentR > *nextR)
                             {
-                                *(outputA - 3) = *currentR;
-                                *(outputA - 2) = *currentR;
-                                *(outputA - 1) = *currentR;
+                                *(outputA - 3) = 255;
+                                *(outputA - 2) = 255;
+                                *(outputA - 1) = 255;
                             }
                             else
                             {
@@ -564,6 +505,102 @@ namespace ImageBird
         }
 
         /// <summary>
+        /// Performs Sobel edge detection on the <see cref="FastBitmap"/>.
+        /// </summary>
+        /// <param name="computeThetas">
+        /// True if the thetas should be computed in addition to the resulting <see cref="FastBitmap"/>, and false otherwise. Defaults to false.
+        /// </param>
+        /// <returns>
+        /// A named-field tuple containing the resulting Sobel-filtered <see cref="FastBitmap"/>, and the calculated thetas. If <paramref name="computeThetas"/> was false, then thetas will be null.
+        /// </returns>
+        public unsafe (FastBitmap magnitude, double[,] thetas) Sobel(bool computeThetas = false)
+        {
+            FastBitmap horizontal = this.KernelOperation(Kernel.HorizontalSobel);
+            FastBitmap vertical = this.KernelOperation(Kernel.VerticalSobel);
+
+            FastBitmap result = new FastBitmap(horizontal.Content.Width, horizontal.Content.Height);
+
+            FastBitmap.Operation(result.Content, (resultData, resultScan0) =>
+            {
+                FastBitmap.Operation(horizontal.Content, (horizontalData, horizontalScan0) =>
+                {
+                    FastBitmap.Operation(vertical.Content, (verticalData, verticalScan0) =>
+                    {
+                        for (int yPos = 0; yPos < horizontal.Content.Height; yPos++)
+                        {
+                            for (int xPos = 0; xPos < horizontal.Content.Width; xPos++)
+                            {
+                                byte* horizontalR = FastBitmap.PixelPointer(
+                                    horizontalScan0, 
+                                    xPos, 
+                                    yPos, 
+                                    horizontalData.Stride, 
+                                    horizontal.bitsPerPixel);
+                                byte* horizontalG = horizontalR + 1;
+                                byte* horizontalB = horizontalR + 2;
+
+                                byte* verticalR = FastBitmap.PixelPointer(
+                                    verticalScan0, 
+                                    xPos, 
+                                    yPos, 
+                                    verticalData.Stride, 
+                                    vertical.bitsPerPixel);
+                                byte* verticalG = verticalR + 1;
+                                byte* verticalB = verticalR + 2;
+
+                                byte* resultR = FastBitmap.PixelPointer(
+                                    resultScan0, 
+                                    xPos, 
+                                    yPos, 
+                                    resultData.Stride, 
+                                    result.bitsPerPixel);
+                                byte* resultG = resultR + 1;
+                                byte* resultB = resultR + 2;
+
+                                *resultR = (byte)(255 * Util.Sqrt(*horizontalR * *horizontalR + *verticalR * *verticalR) / 360); ;
+                                *resultG = (byte)(255 * Util.Sqrt(*horizontalG * *horizontalG + *verticalG * *verticalG) / 360); ;
+                                *resultB = (byte)(255 * Util.Sqrt(*horizontalB * *horizontalB + *verticalB * *verticalB) / 360); ;
+                                *(resultR + 3) = 255;
+                            }
+                        }
+                    });
+                });
+            }, ImageLockMode.WriteOnly);
+
+            double[,] thetas = null;
+            if (computeThetas)
+            {
+                FastBitmap.Operation(horizontal.Content, (horizontalData, horizontalScan0) =>
+                {
+                    FastBitmap.Operation(vertical.Content, (verticalData, verticalScan0) =>
+                    {
+                        for (int yPos = 0; yPos < horizontal.Content.Height; yPos++)
+                        {
+                            for (int xPos = 0; xPos <horizontal.Content.Width; xPos++)
+                            {
+                                thetas[xPos, yPos] = Math.Atan2(*
+                                    FastBitmap.PixelPointer(
+                                        verticalScan0,
+                                        xPos,
+                                        yPos,
+                                        verticalData.Stride,
+                                        vertical.bitsPerPixel),
+                                    *FastBitmap.PixelPointer(
+                                        horizontalScan0,
+                                        xPos,
+                                        yPos,
+                                        horizontalData.Stride,
+                                        horizontal.bitsPerPixel));
+                            }
+                        }
+                    });
+                });
+            }
+
+            return (result, thetas);
+        }
+
+        /// <summary>
         /// Converts the <see cref="FastBitmap"/> to grayscale.
         /// </summary>
         /// <returns>
@@ -626,11 +663,17 @@ namespace ImageBird
         /// <param name="operation">
         /// The operation to perform on the contents of the supplied <see cref="Bitmap"/>.
         /// </param>
-        protected static unsafe void Operation(Bitmap bitmap, LockingDataOperation operation)
+        /// <param name="lockMode">
+        /// The locking mode for the <see cref="Bitmap"/>. Defaults to <see cref="ImageLockMode.ReadOnly"/>.
+        /// </param>
+        protected static unsafe void Operation(
+            Bitmap bitmap, 
+            LockingDataOperation operation, 
+            ImageLockMode lockMode = ImageLockMode.ReadOnly)
         {
             BitmapData contents = bitmap.LockBits(
                 new Rectangle(0, 0, bitmap.Width, bitmap.Height),
-                ImageLockMode.ReadOnly,
+                lockMode,
                 bitmap.PixelFormat);
 
             try

@@ -26,6 +26,7 @@ namespace ImageBird.Tests
         private const string TestData1_DivideBy128_KnownGood = ResourcePath + "TestData1_DivideBy128_KnownGood.png";
         private const string TestData1_EdgeDetect_KnownGood = ResourcePath + "TestData1_CannyEdgeDetect_KnownGood.png";
         private const string TestData1_Pow2_KnownGood = ResourcePath + "TestData1_Pow2_KnownGood.png";
+        private const string TestData1_Sobel_KnownGood = ResourcePath + "TestData1_Sobel_KnownGood.png";
         private const string TestData2_KnownGood = ResourcePath + "TestData2_KnownGood.png";
         private const string TestData2_GrayScale_KnownGood = ResourcePath + "TestData2_GrayScale_KnownGood.png";
         private const string TestData3_KnownGood = ResourcePath + "TestData3_KnownGood.gif";
@@ -175,6 +176,17 @@ namespace ImageBird.Tests
                 actual = actual.ScaleBy(actual.Max()).Pow(2);
                 actual.Content.Save("testing_before.png");
                 actual.RadonTransform(actual.Content.Width).Transform.Content.Save("testing_after.png");
+            }
+        }
+
+        [Fact]
+        public void Sobel_ValidBitmap_ShouldSucceed()
+        {
+            using (SUT.FastBitmap expected = SUT.FastBitmap.FromFile(FastBitmap.TestData1_Sobel_KnownGood))
+            using (SUT.FastBitmap actual = SUT.FastBitmap.FromFile(FastBitmap.TestData1_KnownGood).Sobel().magnitude)
+            {
+                actual.Content.Save("sobel.png");
+                AssertContentsEqual(expected.Content, actual.Content);
             }
         }
 

@@ -12,19 +12,21 @@ namespace ImageBird
     public class Kernel : ICloneable
     {
         private static Lazy<Kernel> horizontalSobel = new Lazy<Kernel>(() =>
-            new Kernel(new double[,] { { 1D, 0D, -1D }, { 2D, 0D, -2D }, { 1D, 0D, -1D } }));
+            new Kernel(new double[,] { { 1D, 0D, -1D }, { 2D, 0D, -2D }, { 1D, 0D, -1D } }) / 4D);
 
         private static Lazy<Kernel> verticalSobel = new Lazy<Kernel>(() =>
-            new Kernel(new double[,] { { 1D, 2D, 1D }, { 0D, 0D, 0D }, { -1D, -2D, -1D } }));
+            new Kernel(new double[,] { { 1D, 2D, 1D }, { 0D, 0D, 0D }, { -1D, -2D, -1D } }) / 4D);
 
         /// <summary>
         /// Instantiates a new Kernel with the specified contents.
         /// </summary>
-        /// <param name="contents">The kernel's values.</param>
+        /// <param name="contents">
+        /// The kernel's values.
+        /// </param>
         protected Kernel(double[,] contents)
         {
             this.Contents = contents;
-            this.Dimension = (int)Math.Sqrt(contents.Length);
+            this.Dimension = Util.Sqrt(contents.Length);
             this.Center = this.Dimension / 2;
         }
 
@@ -107,15 +109,34 @@ namespace ImageBird
                 }
             }
 
-            for (int yPos = 0; yPos < weight; yPos++)
+            return new Kernel(kernel) / sum;
+        }
+
+        /// <summary>
+        /// Divides each value in the <paramref name="kernel"/> by the <paramref name="divisor"/>.
+        /// </summary>
+        /// <param name="kernel">
+        /// The <see cref="Kernel"/> for which each value should be divided by <paramref name="divisor"/>.
+        /// </param>
+        /// <param name="divisor">
+        /// The divisor.
+        /// </param>
+        /// <returns>
+        /// A <see cref="Kernel"/> where each value is equal to <paramref name="kernel"/> at that value's indices, divided by the divsor.
+        /// </returns>
+        public static Kernel operator /(Kernel kernel, double divisor)
+        {
+            Kernel output = (Kernel)kernel.Clone();
+
+            for (int yPos = 0; yPos < kernel.Dimension; yPos++)
             {
-                for (int xPos = 0; xPos < weight; xPos++)
+                for (int xPos = 0; xPos < kernel.Dimension; xPos++)
                 {
-                    kernel[yPos, xPos] /= sum;
+                    kernel.Contents[yPos, xPos] /= divisor;
                 }
             }
 
-            return new Kernel(kernel);
+            return output;
         }
 
         /// <summary>

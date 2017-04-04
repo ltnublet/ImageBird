@@ -97,6 +97,7 @@
     <Content Include="Resources\TestData1_Grayscale_KnownGood.png" />
     <Content Include="Resources\TestData1_KnownGood.png" />
     <Content Include="Resources\TestData1_Pow2_KnownGood.png" />
+    <Content Include="Resources\TestData1_Sobel_KnownGood.png" />
     <Content Include="Resources\TestData2_Grayscale_KnownGood.png" />
     <Content Include="Resources\TestData2_KnownGood.png" />
     <Content Include="Resources\TestData3_Grayscale_KnownGood.gif" />
