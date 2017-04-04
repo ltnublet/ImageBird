@@ -68,6 +68,26 @@ namespace ImageBird
         public int Center { get; protected set; }
 
         /// <summary>
+        /// Returns the associated value of the <see cref="Kernel"/>.
+        /// </summary>
+        /// <param name="xPos">
+        /// The zero-indexed X coordinate, starting from the left.
+        /// </param>
+        /// <param name="yPos">
+        /// The zero-indexed Y coordinate, starting from the top.
+        /// </param>
+        /// <returns>
+        /// The associated value.
+        /// </returns>
+        public double this[int xPos, int yPos]
+        {
+            get
+            {
+                return this.Contents[yPos, xPos];
+            }
+        }
+
+        /// <summary>
         /// Computes the Gaussian kernel for the supplied sigma and weight.
         /// </summary>
         /// <param name="sigma">

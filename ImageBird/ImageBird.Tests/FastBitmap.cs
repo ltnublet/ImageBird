@@ -190,6 +190,15 @@ namespace ImageBird.Tests
             }
         }
 
+        [Fact]
+        public void Debug_Sobel()
+        {
+            using (SUT.FastBitmap actual = SUT.FastBitmap.FromFile(FastBitmap.TestData1_KnownGood))
+            {
+                actual.Debug().Content.Save("debug.png");
+            }
+        }
+
         private static void AssertContentsEqual(Bitmap expected, Bitmap actual)
         {
 #pragma warning disable IDE0018 // Inline variable declaration

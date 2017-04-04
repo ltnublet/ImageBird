@@ -148,6 +148,17 @@ namespace ImageBird
         }
 
         /// <summary>
+        /// DEBUG METHOD.
+        /// </summary>
+        /// <returns>
+        /// DEBUGGERY.
+        /// </returns>
+        public unsafe FastBitmap Debug()
+        {
+            return this.KernelOperation(Kernel.VerticalSobel);
+        }
+
+        /// <summary>
         /// Disposes the <see cref="FastBitmap"/>, freeing it's resources.
         /// </summary>
         public void Dispose()
@@ -168,8 +179,6 @@ namespace ImageBird
             double[,] angles = edgeDetect.thetas;
             
             FastBitmap output = new FastBitmap(new Bitmap(buffer.Content.Width - 2, buffer.Content.Height - 2));
-
-            throw new NotImplementedException("Investigate KernelOperation");
 
             FastBitmap.Operation(output.Content, (outputData, outputScan0) =>
             {
@@ -697,77 +706,116 @@ namespace ImageBird
         /// </returns>
         protected unsafe FastBitmap KernelOperation(Kernel kernel)
         {
-            FastBitmap buffer = new FastBitmap(this.Content, this.bitsPerPixel);
+            FastBitmap result = new FastBitmap(
+                this.Content.Width - kernel.Dimension + 1, 
+                this.Content.Height - kernel.Dimension + 1);
 
-            Rectangle cropRect = new Rectangle(
-                kernel.Center,
-                kernel.Center,
-                buffer.Content.Width - (kernel.Center * 2),
-                buffer.Content.Height - (kernel.Center * 2));
+            (double r, double g, double b)[,] buffer = 
+                new (double r, double g, double b)[result.Content.Width, result.Content.Height];
 
-            Bitmap subBuffer = new Bitmap(cropRect.Width, cropRect.Height);
-
-            using (Graphics graphics = Graphics.FromImage(subBuffer))
+            FastBitmap.Operation(this.Content, (actualData, actualScan0) =>
             {
-                graphics.DrawImage(
-                    buffer.Content,
-                    new Rectangle(0, 0, subBuffer.Width, subBuffer.Height),
-                    cropRect,
-                    GraphicsUnit.Pixel);
-            }
+                int localWidth = result.Content.Width;
 
-            FastBitmap.Operation(subBuffer, (subData, subScan0) =>
-            {
-                FastBitmap.Operation(buffer.Content, (data, scan0) =>
+                Parallel.For(0, result.Content.Height, yPos =>
                 {
-                    int localWidth = subBuffer.Width;
-
-                    Parallel.For(0, subBuffer.Height, yPos =>
+                    Parallel.For(0, localWidth, xPos =>
                     {
-                        Parallel.For(0, localWidth, xPos =>
+                        double sumR = 0D;
+                        double sumG = 0D;
+                        double sumB = 0D;
+
+                        for (int kernelY = 0; kernelY < kernel.Dimension; kernelY++)
                         {
-                            byte* current = FastBitmap.PixelPointer(
-                                subScan0,
-                                xPos,
-                                yPos,
-                                subData.Stride,
-                                buffer.bitsPerPixel);
-
-                            double newR = 0D;
-                            double newG = 0D;
-                            double newB = 0D;
-
-                            for (int localY = -kernel.Center; localY <= kernel.Center; localY++)
+                            for (int kernelX = 0; kernelX < kernel.Dimension; kernelX++)
                             {
-                                for (int localX = -kernel.Center; localX <= kernel.Center; localX++)
-                                {
-                                    double scaling = kernel.Contents[localY + kernel.Center, localX + kernel.Center];
+                                double scalar = kernel[kernelX, kernelY];
 
-                                    byte* local = FastBitmap.PixelPointer(
-                                        scan0,
-                                        xPos + kernel.Center + localX,
-                                        yPos + kernel.Center + localY,
-                                        data.Stride,
-                                        buffer.bitsPerPixel);
+                                byte* actualR = FastBitmap.PixelPointer(
+                                    actualScan0, 
+                                    xPos + kernelX, 
+                                    yPos + kernelY, 
+                                    actualData.Stride, 
+                                    this.bitsPerPixel);
 
-                                    newR += ((double)(*local)) * scaling;
-                                    newG += ((double)(*(local + 1))) * scaling;
-                                    newB += ((double)(*(local + 2))) * scaling;
-                                }
+                                sumR += (*actualR * scalar);
+                                sumG += (*(actualR + 1) * scalar);
+                                sumB += (*(actualR + 2) * scalar);
                             }
+                        }
 
-                            *current = (byte)(int)newR;
-                            *(current + 1) = (byte)(int)newG;
-                            *(current + 2) = (byte)(int)newB;
-                        });
+                        buffer[xPos, yPos] = (sumR, sumG, sumB);
                     });
                 });
             });
 
-            buffer.Content.Dispose();
-            buffer.Content = subBuffer;
+            double max = double.MinValue;
 
-            return buffer;
+            foreach ((double r, double g, double b) tuple in buffer)
+            {
+                if (tuple.r > max)
+                {
+                    max = tuple.r;
+                }
+
+                if (tuple.g > max)
+                {
+                    max = tuple.g;
+                }
+
+                if (tuple.b > max)
+                {
+                    max = tuple.b;
+                }
+            }
+            throw new NotImplementedException("Figure how scaling the channels is supposed to work");
+            FastBitmap.Operation(result.Content, (data, scan0) =>
+            {
+            //    // HACK: Code is duplicated for performance - don't want to scale the channels unless necessary, and don't want to repeat the check many times.
+            //    if (max > 255)
+            //    {
+            //        Parallel.For(0, data.Height, yPos =>
+            //        {
+            //            for (int xPos = 0; xPos < data.Width; xPos++)
+            //            {
+            //                byte* resultR = FastBitmap.PixelPointer(
+            //                    scan0,
+            //                    xPos,
+            //                    yPos,
+            //                    data.Stride,
+            //                    result.bitsPerPixel);
+
+            //                *resultR = (byte)(Math.Round((buffer[xPos, yPos].r / max)) * 255);
+            //                *(resultR + 1) = (byte)(Math.Round((buffer[xPos, yPos].g / max)) * 255);
+            //                *(resultR + 2) = (byte)(Math.Round((buffer[xPos, yPos].b / max)) * 255);
+            //                *(resultR + 3) = 255;
+            //            }
+            //        });
+            //    }
+            //    else
+            //    {
+                    Parallel.For(0, data.Height, yPos =>
+                    {
+                        for (int xPos = 0; xPos < data.Width; xPos++)
+                        {
+                            byte* resultR = FastBitmap.PixelPointer(
+                                scan0,
+                                xPos,
+                                yPos,
+                                data.Stride,
+                                result.bitsPerPixel);
+
+                            *resultR = (byte)(buffer[xPos, yPos].r);
+                            *(resultR + 1) = (byte)(buffer[xPos, yPos].g);
+                            *(resultR + 2) = (byte)(buffer[xPos, yPos].b);
+
+                            *(resultR + 3) = 255;
+                        }
+                    });
+                //}
+            }, ImageLockMode.WriteOnly);
+
+            return result;
         }
 
         /// <summary>

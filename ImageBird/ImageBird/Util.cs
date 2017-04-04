@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace ImageBird
 {
+    /// <summary>
+    /// Bag of utility methods.
+    /// </summary>
     internal class Util
     {
         /// <summary>
@@ -19,7 +22,11 @@ namespace ImageBird
         /// </returns>
         public static int Sqrt(int num)
         {
-            if (0 == num) { return 0; }
+            if (num == 0)
+            {
+                return 0;
+            }
+
             int n = (num / 2) + 1;
             int n1 = (n + (num / n)) / 2;
 
