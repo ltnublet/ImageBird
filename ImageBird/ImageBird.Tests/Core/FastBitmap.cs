@@ -193,9 +193,9 @@ namespace ImageBird.Core.Tests
         [Fact]
         public void Debug_Sobel()
         {
-            using (SUT.FastBitmap actual = SUT.FastBitmap.FromFile(FastBitmap.TestData1_KnownGood))
+            using (SUT.FastBitmap actual = SUT.FastBitmap.FromFile(@"C:\Users\User\Downloads\Bikesgray.jpg"))
             {
-                actual.Debug().Content.Save("debug.png");
+                actual.Sobel().magnitude.Content.Save("debug.png");
             }
         }
 

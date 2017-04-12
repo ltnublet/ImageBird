@@ -8,6 +8,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using ImageBird.Core.Properties;
+using System.Security.Cryptography;
 
 namespace ImageBird.Core
 {
@@ -566,9 +567,9 @@ namespace ImageBird.Core
                                 byte* resultG = resultR + 1;
                                 byte* resultB = resultR + 2;
 
-                                *resultR = (byte)(255 * Util.Sqrt(*horizontalR * *horizontalR + *verticalR * *verticalR) / 360); ;
-                                *resultG = (byte)(255 * Util.Sqrt(*horizontalG * *horizontalG + *verticalG * *verticalG) / 360); ;
-                                *resultB = (byte)(255 * Util.Sqrt(*horizontalB * *horizontalB + *verticalB * *verticalB) / 360); ;
+                                *resultR = (byte)(255 * Util.Sqrt(*horizontalR * *horizontalR + *verticalR * *verticalR) / 360);
+                                *resultG = (byte)(255 * Util.Sqrt(*horizontalG * *horizontalG + *verticalG * *verticalG) / 360);
+                                *resultB = (byte)(255 * Util.Sqrt(*horizontalB * *horizontalB + *verticalB * *verticalB) / 360);
                                 *(resultR + 3) = 255;
                             }
                         }
@@ -587,8 +588,8 @@ namespace ImageBird.Core
                         {
                             for (int xPos = 0; xPos <horizontal.Content.Width; xPos++)
                             {
-                                thetas[xPos, yPos] = Math.Atan2(*
-                                    FastBitmap.PixelPointer(
+                                thetas[xPos, yPos] = Math.Atan2(
+                                    *FastBitmap.PixelPointer(
                                         verticalScan0,
                                         xPos,
                                         yPos,
@@ -744,6 +745,21 @@ namespace ImageBird.Core
                             }
                         }
 
+                        if (sumR < 0D)
+                        {
+                            sumR = -sumR;
+                        }
+
+                        if (sumG < 0D)
+                        {
+                            sumG = -sumG;
+                        }
+
+                        if (sumB < 0D)
+                        {
+                            sumB = -sumB;
+                        }
+
                         buffer[xPos, yPos] = (sumR, sumG, sumB);
                     });
                 });
@@ -768,32 +784,32 @@ namespace ImageBird.Core
                     max = tuple.b;
                 }
             }
-            throw new NotImplementedException("Figure how scaling the channels is supposed to work");
+
             FastBitmap.Operation(result.Content, (data, scan0) =>
             {
-            //    // HACK: Code is duplicated for performance - don't want to scale the channels unless necessary, and don't want to repeat the check many times.
-            //    if (max > 255)
-            //    {
-            //        Parallel.For(0, data.Height, yPos =>
-            //        {
-            //            for (int xPos = 0; xPos < data.Width; xPos++)
-            //            {
-            //                byte* resultR = FastBitmap.PixelPointer(
-            //                    scan0,
-            //                    xPos,
-            //                    yPos,
-            //                    data.Stride,
-            //                    result.bitsPerPixel);
+                // HACK: Code is duplicated for performance - don't want to scale the channels unless necessary, and don't want to repeat the check many times.
+                //if (max > 255)
+                //{
+                //    Parallel.For(0, data.Height, yPos =>
+                //    {
+                //        for (int xPos = 0; xPos < data.Width; xPos++)
+                //        {
+                //            byte* resultR = FastBitmap.PixelPointer(
+                //                scan0,
+                //                xPos,
+                //                yPos,
+                //                data.Stride,
+                //                result.bitsPerPixel);
 
-            //                *resultR = (byte)(Math.Round((buffer[xPos, yPos].r / max)) * 255);
-            //                *(resultR + 1) = (byte)(Math.Round((buffer[xPos, yPos].g / max)) * 255);
-            //                *(resultR + 2) = (byte)(Math.Round((buffer[xPos, yPos].b / max)) * 255);
-            //                *(resultR + 3) = 255;
-            //            }
-            //        });
-            //    }
-            //    else
-            //    {
+                //            *resultR = (byte)(Math.Round((buffer[xPos, yPos].r / max)) * 255);
+                //            *(resultR + 1) = (byte)(Math.Round((buffer[xPos, yPos].g / max)) * 255);
+                //            *(resultR + 2) = (byte)(Math.Round((buffer[xPos, yPos].b / max)) * 255);
+                //            *(resultR + 3) = 255;
+                //        }
+                //    });
+                //}
+                //else
+                //{
                     Parallel.For(0, data.Height, yPos =>
                     {
                         for (int xPos = 0; xPos < data.Width; xPos++)

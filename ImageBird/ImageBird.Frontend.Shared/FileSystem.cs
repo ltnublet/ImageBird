@@ -85,6 +85,25 @@ namespace ImageBird.Frontend.Shared
         }
 
         /// <summary>
+        /// Computes the MD5 hash of a file.
+        /// </summary>
+        /// <param name="file">
+        /// The file to compute the MD5 hash of.
+        /// </param>
+        /// <returns>
+        /// The computed MD5 hash of the file.
+        /// </returns>
+        public static string FileHash(string file)
+        {
+            MD5 md5 = MD5.Create();
+
+            byte[] contentBytes = File.ReadAllBytes(file);
+            md5.TransformFinalBlock(contentBytes, 0, contentBytes.Length);
+
+            return BitConverter.ToString(md5.Hash).Replace("-", "");
+        }
+
+        /// <summary>
         /// Computes the MD5 hash of a directory <paramref name="path"/>'s contents.
         /// </summary>
         /// <param name="path">
