@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -81,6 +82,42 @@ namespace ImageBird.Frontend.Shared
             }
 
             return files.Select(x => Path.GetFullPath(x)).ToList();
+        }
+
+        /// <summary>
+        /// Computes the MD5 hash of a directory <paramref name="path"/>'s contents.
+        /// </summary>
+        /// <param name="path">
+        /// The directory to compute the hash of.
+        /// </param>
+        /// <returns>
+        /// The MD5 hash of the specified <paramref name="path"/>.
+        /// </returns>
+        public static string FolderHash(string path)
+        {
+            List<string> files = FileSystem.EnumerateFiles(path, true);
+
+            MD5 md5 = MD5.Create();
+
+            for (int counter = 0; counter < files.Count; counter++)
+            {
+                string file = files[counter];
+                
+                byte[] pathBytes = Encoding.UTF8.GetBytes(file);
+                md5.TransformBlock(pathBytes, 0, pathBytes.Length, pathBytes, 0);
+                
+                byte[] contentBytes = File.ReadAllBytes(file);
+                if (counter == files.Count - 1)
+                {
+                    md5.TransformFinalBlock(contentBytes, 0, contentBytes.Length);
+                }
+                else
+                {
+                    md5.TransformBlock(contentBytes, 0, contentBytes.Length, contentBytes, 0);
+                }
+            }
+
+            return BitConverter.ToString(md5.Hash).Replace("-", "");
         }
     }
 }
