@@ -7,9 +7,9 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using ImageBird.Properties;
+using ImageBird.Core.Properties;
 
-namespace ImageBird
+namespace ImageBird.Core
 {
     /// <summary>
     /// A Bitmap implementation with improved performance.

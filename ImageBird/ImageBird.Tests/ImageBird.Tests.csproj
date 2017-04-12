@@ -82,9 +82,9 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ImageBird\ImageBird.csproj">
+    <ProjectReference Include="..\ImageBird.Core\ImageBird.Core.csproj">
       <Project>{e749fcca-7730-4ba7-a0d3-6869524d2c2a}</Project>
-      <Name>ImageBird</Name>
+      <Name>ImageBird.Core</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

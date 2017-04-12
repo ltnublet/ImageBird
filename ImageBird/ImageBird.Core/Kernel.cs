@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ImageBird
+namespace ImageBird.Core
 {
     /// <summary>
     /// Represents a square 2-dimensional kernel used for kernel convolution.

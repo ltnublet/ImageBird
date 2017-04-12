@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Xunit;
-using SUT = ImageBird;
+using SUT = ImageBird.Core;
 
 namespace ImageBird.Tests
 {

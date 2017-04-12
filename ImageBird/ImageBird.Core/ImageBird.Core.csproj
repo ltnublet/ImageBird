@@ -7,8 +7,8 @@
     <ProjectGuid>{E749FCCA-7730-4BA7-A0D3-6869524D2C2A}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ImageBird</RootNamespace>
-    <AssemblyName>ImageBird</AssemblyName>
+    <RootNamespace>ImageBird.Core</RootNamespace>
+    <AssemblyName>ImageBird.Core</AssemblyName>
     <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <StyleCopTreatErrorsAsWarnings>False</StyleCopTreatErrorsAsWarnings>
@@ -23,7 +23,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <DocumentationFile>bin\Debug\ImageBird.xml</DocumentationFile>
+    <DocumentationFile>bin\Debug\ImageBird.Core.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>

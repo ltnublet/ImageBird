@@ -4,8 +4,8 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using ImageBird.Properties;
-using SUT = ImageBird;
+using ImageBird.Core.Properties;
+using SUT = ImageBird.Core;
 
 namespace ImageBird.Tests
 {

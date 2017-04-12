@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ImageBird
+namespace ImageBird.Core
 {
     /// <summary>
     /// Bag of utility methods.
