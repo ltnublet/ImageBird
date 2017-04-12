@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using Xunit;
 using SUT = ImageBird.Core;
 
-namespace ImageBird.Tests
+namespace ImageBird.Core.Tests
 {
     /// <summary>
     /// Tests for the ImageBird.Kernel class.

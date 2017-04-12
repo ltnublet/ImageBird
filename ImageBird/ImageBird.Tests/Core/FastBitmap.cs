@@ -8,14 +8,14 @@ using System.Threading.Tasks;
 using Xunit;
 using SUT = ImageBird.Core;
 
-namespace ImageBird.Tests
+namespace ImageBird.Core.Tests
 {
     /// <summary>
     /// Tests for the ImageBird.FastBitmap class.
     /// </summary>
     public class FastBitmap
     {
-        private const string ResourcePath = @"..\..\Resources\";
+        private const string ResourcePath = @"..\..\Core\Resources\";
 
         private const string TestData1_KnownGood = ResourcePath + "TestData1_KnownGood.png";
         private const string TestData1_GrayScale_KnownGood = ResourcePath + "TestData1_GrayScale_KnownGood.png";

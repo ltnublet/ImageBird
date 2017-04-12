@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using ImageBird.Core.Properties;
 using SUT = ImageBird.Core;
 
-namespace ImageBird.Tests
+namespace ImageBird.Core.Tests
 {
     using global::System.Collections;
 

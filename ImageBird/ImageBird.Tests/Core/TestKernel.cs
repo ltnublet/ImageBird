@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using SUT = ImageBird.Core;
 
-namespace ImageBird.Tests
+namespace ImageBird.Core.Tests
 {
     /// <summary>
     /// Internal class for Kernel tests which allows for the instantiation of arbitrary kernels.
