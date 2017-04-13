@@ -41,8 +41,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="FileSystem.cs" />
+    <Compile Include="IIndex.cs" />
     <Compile Include="PerceptualHash.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ConcurrentTwoWayDictionary.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ImageBird.Core\ImageBird.Core.csproj">

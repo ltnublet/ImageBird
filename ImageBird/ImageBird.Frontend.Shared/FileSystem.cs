@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace ImageBird.Frontend.Shared
 {
@@ -52,9 +50,11 @@ namespace ImageBird.Frontend.Shared
         /// A case-sensitive <see cref="IEnumerable{T}"/> of type <see cref="string"/> which contains any directories which should be excluded, or null if there are no excluded directories.
         /// </param>
         /// <param name="excludedFileTypes">
-        /// A case-insensitive <see cref="IEnumerable{T}"/> of type <see cref="string"/> which contains any filetypes which should be excluded, or null if there are no excluded filetypes
+        /// A case-insensitive <see cref="IEnumerable{T}"/> of type <see cref="string"/> which contains any filetypes which should be excluded, or null if there are no excluded filetypes.
         /// </param>
-        /// <returns></returns>
+        /// <returns>
+        /// All files which specify the constraints supplied as parameters.
+        /// </returns>
         public static List<string> EnumerateFiles(
             string root, 
             bool includeSubDirectories, 
@@ -100,7 +100,7 @@ namespace ImageBird.Frontend.Shared
             byte[] contentBytes = File.ReadAllBytes(file);
             md5.TransformFinalBlock(contentBytes, 0, contentBytes.Length);
 
-            return BitConverter.ToString(md5.Hash).Replace("-", "");
+            return BitConverter.ToString(md5.Hash).Replace("-", string.Empty);
         }
 
         /// <summary>
@@ -136,7 +136,7 @@ namespace ImageBird.Frontend.Shared
                 }
             }
 
-            return BitConverter.ToString(md5.Hash).Replace("-", "");
+            return BitConverter.ToString(md5.Hash).Replace("-", string.Empty);
         }
     }
 }
