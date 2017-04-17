@@ -11,8 +11,12 @@ namespace ImageBird.Frontend.Shared
     /// <summary>
     /// Theadsafe two-way dictionary implementation.
     /// </summary>
-    /// <typeparam name="TKey"></typeparam>
-    /// <typeparam name="TValue"></typeparam>
+    /// <typeparam name="TKey">
+    /// The primary key type.
+    /// </typeparam>
+    /// <typeparam name="TValue">
+    /// The primary value type.
+    /// </typeparam>
     public class ConcurrentTwoWayDictionary<TKey, TValue>
     {
         private Dictionary<TKey, TValue> keyMapping;
@@ -300,7 +304,7 @@ namespace ImageBird.Frontend.Shared
         {
             lock (this.keyMapping)
             {
-                return this.keyMapping.GetEnumerator();
+                return this.keyMapping.ToList().GetEnumerator();
             }
         }
 
@@ -314,7 +318,7 @@ namespace ImageBird.Frontend.Shared
         {
             lock (this.valueMapping)
             {
-                return this.valueMapping.GetEnumerator();
+                return this.valueMapping.ToList().GetEnumerator();
             }
         }
 

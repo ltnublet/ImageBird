@@ -248,6 +248,18 @@ namespace ImageBird.Core
         }
 
         /// <summary>
+        /// Placeholder.
+        /// </summary>
+        /// <returns>
+        /// Placeholder.
+        /// </returns>
+        public string GetPerceptualHash()
+        {
+            // Placeholder for working on <see cref="ImageBird.Frontend.Shared.Index"/>.
+            return Guid.NewGuid().ToString();
+        }
+
+        /// <summary>
         /// Returns the largest magnitude in the <see cref="FastBitmap"/>.
         /// </summary>
         /// <returns>

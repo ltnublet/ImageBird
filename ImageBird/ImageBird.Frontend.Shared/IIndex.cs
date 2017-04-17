@@ -6,11 +6,37 @@ using System.Threading.Tasks;
 
 namespace ImageBird.Frontend.Shared
 {
-    interface IIndex
+    public interface IIndex
     {
-        IReadOnlyCollection<string> MonitoredDirectories { get; }
+        IReadOnlyCollection<string> Directories { get; }
 
-        ConcurrentTwoWayDictionary<string, PerceptualHash> Files { get; }
+        IReadOnlyCollection<string> Files { get; }
+
+        IReadOnlyCollection<string> Categories { get; }
+
+        void AddDirectory(string path);
+
+        IReadOnlyCollection<string> AddFile(string path);
+
+        void AddCategory(string category);
+
+        void RemoveDirectory(string path);
+
+        void RemoveFile(string path);
+
+        void RemoveCategory(string category);
+
+        IndexObject GetByPath(string path);
+
+        IndexObject GetByPerceptualHash(string hash);
+
+        IReadOnlyCollection<IndexObject> GetByCategory(string category);
+
+        Category GetCategory(string category);
+
+        void Link(IndexObject item, Category category);
+
+        void Load(string path);
 
         void Save(string path);
     }
