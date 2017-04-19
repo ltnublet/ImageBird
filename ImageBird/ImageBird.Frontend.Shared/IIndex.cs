@@ -16,7 +16,7 @@ namespace ImageBird.Frontend.Shared
 
         void AddDirectory(string path);
 
-        IReadOnlyCollection<string> AddFile(string path);
+        IReadOnlyCollection<IndexObject> AddFile(string path);
 
         void AddCategory(string category);
 
@@ -31,10 +31,6 @@ namespace ImageBird.Frontend.Shared
         IndexObject GetByPerceptualHash(string hash);
 
         IReadOnlyCollection<IndexObject> GetByCategory(string category);
-
-        Category GetCategory(string category);
-
-        void Link(IndexObject item, Category category);
 
         void Load(string path);
 
