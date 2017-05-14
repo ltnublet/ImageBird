@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using ImageBird.Core.Properties;
 using SUT = ImageBird.Core;
 using System.Diagnostics;
+using Xunit;
 
 namespace ImageBird.Tests
 {
@@ -15,6 +16,20 @@ namespace ImageBird.Tests
     /// </summary>
     public static class TestUtil
     {
+        public static void AssertContentsEqual(Bitmap expected, Bitmap actual)
+        {
+#pragma warning disable IDE0018 // Inline variable declaration
+            (Point point, Color left, Color right)? mismatch;
+#pragma warning restore IDE0018 // Inline variable declaration
+            bool result = TestUtil.ContentsEqual(expected, actual, out mismatch) && !mismatch.HasValue;
+
+            string message = mismatch.HasValue
+                ? $"Mismatch detected at {mismatch.Value.point.ToString()}: expected {mismatch.Value.left}, got {mismatch.Value.right}"
+                : "Mismatch detected, but was not due to color mismatch (did the bitmaps have the same dimensions?)";
+
+            Assert.True(result, result ? string.Empty : message);
+        }
+
         /// <summary>
         /// Compares two <see cref="Bitmap"/>s and checks if their contents are equal.
         /// </summary>

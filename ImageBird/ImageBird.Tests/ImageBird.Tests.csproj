@@ -69,6 +69,7 @@
     <Otherwise />
   </Choose>
   <ItemGroup>
+    <Compile Include="Core2\FastBitmap.cs" />
     <Compile Include="Core\FastBitmap.cs" />
     <Compile Include="Core\Kernel.cs" />
     <Compile Include="Frontend\FileSystem.cs" />
@@ -81,6 +82,10 @@
     <None Include="Settings.StyleCop" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ImageBird.Core2\ImageBird.Core2.csproj">
+      <Project>{c54287b3-b58c-4f05-9314-de20a1bc62f6}</Project>
+      <Name>ImageBird.Core2</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ImageBird.Core\ImageBird.Core.csproj">
       <Project>{e749fcca-7730-4ba7-a0d3-6869524d2c2a}</Project>
       <Name>ImageBird.Core</Name>
@@ -108,9 +113,7 @@
     <Content Include="Core\Resources\TestData4_KnownGood.png" />
     <Content Include="Core\Resources\TestData_txt.txt" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Core2\" />
-  </ItemGroup>
+  <ItemGroup />
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
       <ItemGroup>

@@ -71,7 +71,7 @@ namespace ImageBird.Tests.Core
             using (Bitmap expected = (Bitmap)Image.FromFile(expectedOutput))
             using (SUT.FastBitmap actual = SUT.FastBitmap.FromFile(input))
             {
-                FastBitmap.AssertContentsEqual(expected, actual.ScaleBy(factor).Content);
+                TestUtil.AssertContentsEqual(expected, actual.ScaleBy(factor).Content);
             }
         }
 
@@ -84,7 +84,7 @@ namespace ImageBird.Tests.Core
             using (Bitmap expected = (Bitmap)Image.FromFile(expectedOutput))
             using (SUT.FastBitmap actual = SUT.FastBitmap.FromFile(input))
             {
-                FastBitmap.AssertContentsEqual(expected, actual.Blur(sigma, weight).Content);
+                TestUtil.AssertContentsEqual(expected, actual.Blur(sigma, weight).Content);
             }
         }
 
@@ -95,7 +95,7 @@ namespace ImageBird.Tests.Core
             using (SUT.FastBitmap actual = SUT.FastBitmap.FromFile(TestData1_KnownGood).EdgeDetect())
             {
                 actual.Content.Save("output.png");
-                FastBitmap.AssertContentsEqual(expected.Content, actual.Content);
+                TestUtil.AssertContentsEqual(expected.Content, actual.Content);
             }
         }
 
@@ -133,7 +133,7 @@ namespace ImageBird.Tests.Core
             using (Bitmap expected = new Bitmap(Image.FromFile(expectedFile)))
             using (SUT.FastBitmap actual = SUT.FastBitmap.FromFile(actualFile))
             {
-                FastBitmap.AssertContentsEqual(expected, actual.ToGrayscale().Content);
+                TestUtil.AssertContentsEqual(expected, actual.ToGrayscale().Content);
             }
         }
 
@@ -152,7 +152,7 @@ namespace ImageBird.Tests.Core
             using (Bitmap expected = new Bitmap(Image.FromFile(TestData1_Pow2_KnownGood)))
             using (SUT.FastBitmap actual = SUT.FastBitmap.FromFile(FastBitmap.TestData1_KnownGood))
             {
-                FastBitmap.AssertContentsEqual(expected, actual.Pow(2).Content);
+                TestUtil.AssertContentsEqual(expected, actual.Pow(2).Content);
             }
         }
 
@@ -186,7 +186,7 @@ namespace ImageBird.Tests.Core
             using (SUT.FastBitmap actual = SUT.FastBitmap.FromFile(FastBitmap.TestData1_KnownGood).Sobel().magnitude)
             {
                 actual.Content.Save("sobel.png");
-                AssertContentsEqual(expected.Content, actual.Content);
+                TestUtil.AssertContentsEqual(expected.Content, actual.Content);
             }
         }
 
@@ -197,20 +197,6 @@ namespace ImageBird.Tests.Core
             {
                 actual.Sobel().magnitude.Content.Save("debug.png");
             }
-        }
-
-        private static void AssertContentsEqual(Bitmap expected, Bitmap actual)
-        {
-#pragma warning disable IDE0018 // Inline variable declaration
-            (Point point, Color left, Color right)? mismatch;
-#pragma warning restore IDE0018 // Inline variable declaration
-            bool result = TestUtil.ContentsEqual(expected, actual, out mismatch) && !mismatch.HasValue;
-
-            string message = mismatch.HasValue
-                ? $"Mismatch detected at {mismatch.Value.point.ToString()}: expected {mismatch.Value.left}, got {mismatch.Value.right}"
-                : "Mismatch detected, but was not due to color mismatch (did the bitmaps have the same dimensions?)";
-
-            Assert.True(result, result ? string.Empty : message);
         }
     }
 }
