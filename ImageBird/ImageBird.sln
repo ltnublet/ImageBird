@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26403.3
+VisualStudioVersion = 15.0.26430.6
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageBird.Core", "ImageBird.Core\ImageBird.Core.csproj", "{E749FCCA-7730-4BA7-A0D3-6869524D2C2A}"
 EndProject
@@ -15,6 +15,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageBird.Frontend.WinForms", "ImageBird.Frontend.WinForms\ImageBird.Frontend.WinForms.csproj", "{D20EBFC9-4242-409A-B1A8-1A2AC71D519D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageBird.Frontend.Shared", "ImageBird.Frontend.Shared\ImageBird.Frontend.Shared.csproj", "{531FFA89-2066-4C14-9946-F3A1FA657823}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageBird.Core2", "ImageBird.Core2\ImageBird.Core2.csproj", "{C54287B3-B58C-4F05-9314-DE20A1BC62F6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -38,6 +40,10 @@ Global
 		{531FFA89-2066-4C14-9946-F3A1FA657823}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{531FFA89-2066-4C14-9946-F3A1FA657823}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{531FFA89-2066-4C14-9946-F3A1FA657823}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C54287B3-B58C-4F05-9314-DE20A1BC62F6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C54287B3-B58C-4F05-9314-DE20A1BC62F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C54287B3-B58C-4F05-9314-DE20A1BC62F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C54287B3-B58C-4F05-9314-DE20A1BC62F6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

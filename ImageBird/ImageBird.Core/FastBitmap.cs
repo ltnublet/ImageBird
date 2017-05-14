@@ -579,9 +579,9 @@ namespace ImageBird.Core
                                 byte* resultG = resultR + 1;
                                 byte* resultB = resultR + 2;
 
-                                *resultR = (byte)(255 * Util.Sqrt(*horizontalR * *horizontalR + *verticalR * *verticalR) / 360);
-                                *resultG = (byte)(255 * Util.Sqrt(*horizontalG * *horizontalG + *verticalG * *verticalG) / 360);
-                                *resultB = (byte)(255 * Util.Sqrt(*horizontalB * *horizontalB + *verticalB * *verticalB) / 360);
+                                *resultR = (byte)(255 * Math.Sqrt(*horizontalR * *horizontalR + *verticalR * *verticalR) / 360);
+                                *resultG = (byte)(255 * Math.Sqrt(*horizontalG * *horizontalG + *verticalG * *verticalG) / 360);
+                                *resultB = (byte)(255 * Math.Sqrt(*horizontalB * *horizontalB + *verticalB * *verticalB) / 360);
                                 *(resultR + 3) = 255;
                             }
                         }

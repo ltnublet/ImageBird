@@ -26,7 +26,7 @@ namespace ImageBird.Core
         protected Kernel(double[,] contents)
         {
             this.Contents = contents;
-            this.Dimension = Util.Sqrt(contents.Length);
+            this.Dimension = (int)Math.Sqrt(contents.Length);
             this.Center = this.Dimension / 2;
         }
 

@@ -6,11 +6,10 @@ using System.Text;
 using System.Threading.Tasks;
 using ImageBird.Core.Properties;
 using SUT = ImageBird.Core;
+using System.Diagnostics;
 
-namespace ImageBird.Core.Tests
+namespace ImageBird.Tests
 {
-    using global::System.Collections;
-
     /// <summary>
     /// Shared utilities for tests.
     /// </summary>
@@ -107,6 +106,20 @@ namespace ImageBird.Core.Tests
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Performs the specified operation, measuring the elapsed time.
+        /// </summary>
+        /// <param name="operation">The operation to perform.</param>
+        /// <returns>The time the operation took to complete.</returns>
+        public static TimeSpan TimeOperation(Action operation)
+        {
+            Stopwatch timer = Stopwatch.StartNew();
+            operation.Invoke();
+            timer.Stop();
+
+            return timer.Elapsed;
         }
 
         /// <summary>
